@@ -1,0 +1,18 @@
+<template>
+    <div class="sidebar">
+        SIDEBAR
+    </div>
+</template>
+
+<script>
+</script>
+<style scoped>
+    .sidebar {
+        position: absolute;
+        top: 60px;
+        bottom: 0;
+        left: 0;
+        width: 220px;
+        background: #263238;
+    }
+</style>
