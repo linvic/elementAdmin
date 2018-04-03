@@ -60,7 +60,7 @@
 					<span>数据字典</span>
 				</el-menu-item>
 				<el-menu-item index="">
-					<span>设置提醒</span>
+					<span>跟进设置</span>
 				</el-menu-item>
 				<el-menu-item index="">
 					<span>组织架构</span>

@@ -1,20 +1,26 @@
 <template>
     <div>
-        <el-form :model="form">
-            <el-form-item label="活动名称" :label-width="formLabelWidth">
-                <el-input v-model="form.name" auto-complete="off"></el-input>
+        <el-form ref="form" :model="form" label-width="80px">
+            <el-form-item label="字典名称">
+                <el-input v-model="form.name"></el-input>
             </el-form-item>
-            <el-form-item label="活动区域" :label-width="formLabelWidth">
-                <el-select v-model="form.region" placeholder="请选择活动区域">
-                    <el-option label="区域一" value="shanghai"></el-option>
-                    <el-option label="区域二" value="beijing"></el-option>
-                </el-select>
+            <el-form-item label="字典值">
+                <el-input v-model="form.value"></el-input>
+            </el-form-item>
+            <el-form-item label="排序">
+                <el-input v-model="form.order"></el-input>
+            </el-form-item>
+            <el-form-item label="是否默认">
+                <el-switch v-model="form.isdefault"></el-switch>
+            </el-form-item>
+            <el-form-item label="备注">
+                <el-input type="textarea" v-model="form.remark"></el-input>
+            </el-form-item>
+            <el-form-item>
+                <el-button type="primary">立即创建</el-button>
+                <el-button>取消</el-button>
             </el-form-item>
         </el-form>
-        <div slot="footer" class="el-dialog__footer">
-            <el-button @click="dialogDicAdd = false">取 消</el-button>
-            <el-button type="primary" @click="dialogDicAdd = false">确 定</el-button>
-        </div>
     </div>
 </template>
 
@@ -22,26 +28,16 @@
 export default {
     data () {
         return {
-            formLabelWidth: '120px',
             form: {
                 name: '',
-                region: '',
-                date1: '',
-                date2: '',
-                delivery: false,
-                type: [],
-                resource: '',
-                desc: ''
+                value: '',
+                order: '',
+                isdefault: false,
+                remark: ''
             }
         }
     }
 }
 </script>
 <style scoped>
-    .el-dialog__footer {
-        padding: 20px;
-        padding-top: 10px;
-        text-align: right;
-        box-sizing: border-box;
-    }
 </style>
