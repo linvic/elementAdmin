@@ -18,7 +18,7 @@
             </el-form-item>
             <el-form-item>
                 <el-button type="primary">立即创建</el-button>
-                <el-button>取消</el-button>
+                <el-button @click="closeDialog(false)">取消</el-button>
             </el-form-item>
         </el-form>
     </div>
@@ -35,6 +35,11 @@ export default {
                 isdefault: false,
                 remark: ''
             }
+        }
+    },
+    methods: {
+        closeDialog(val){
+            this.$emit('changeDialog', val)
         }
     }
 }

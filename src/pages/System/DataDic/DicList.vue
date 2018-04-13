@@ -6,7 +6,7 @@
                 <el-card>
                     <div slot="header" class="clearfix">
                         <span>字典分类</span>
-                        <el-button style="float: right; padding: 3px 0" type="text">分类配置</el-button>
+                        <el-button style="float: right; padding: 3px 0" type="text" @click="dialogDicType = true">分类配置</el-button>
                     </div>
                     <el-input placeholder="输入关键字进行过滤" v-model="filterText" size="mini" suffix-icon="el-icon-search"></el-input>
                     <el-tree :data="dicData" default-expand-all :filter-node-method="filterNode" @node-click="handleNodeClick" ref="tree"></el-tree>
@@ -55,16 +55,21 @@
             </el-main>
         </el-container>
         <el-dialog title="新增字典数据" :visible.sync="dialogDicAdd">
-            <DicAdd></DicAdd>
+            <DicAdd v-on:changeDialog="changeDialogDicAdd"></DicAdd>
+        </el-dialog>
+        <el-dialog title="字典分类管理" :visible.sync="dialogDicType" fullscreen>
+            <DicType></DicType>
         </el-dialog>
     </div>
 </template>
 
 <script>
 import DicAdd from './DicAdd'
+import DicType from './DicType'
 export default {
     components: {
-        DicAdd
+        DicAdd,
+        DicType
     },
     data () {
         return {
@@ -112,6 +117,7 @@ export default {
                 remark: '备注内容'
             }],
             dialogDicAdd: false, // 新增弹层
+            dialogDicType: false, // 新增弹层
             currentPage: 1 // 当前页码
         }
     },
@@ -123,7 +129,7 @@ export default {
     methods: {
         handleNodeClick(data) {
             console.log(data.id);
-            this.currentDicTypeTxt = '-' + data.label;
+            this.currentDicTypeTxt = ' - ' + data.label;
         },
         filterNode(value, data) {
             if (!value) return true;
@@ -140,6 +146,9 @@ export default {
         },
         currentPageChange(val) { // 分页：当前页码改变时
             console.log(`当前页: ${val}`);
+        },
+        changeDialogDicAdd(val) {
+            this.dialogDicAdd = val
         }
     }
 }

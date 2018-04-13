@@ -1,8 +1,8 @@
 <template>
 	<div class="sidebar">
-		<el-menu class="site-menu" text-color="#a3afb7" active-text-color="#ffffff" background-color="#263238" default-active="/index" router unique-opened>
+		<el-menu class="site-menu" text-color="#a3afb7" active-text-color="#ffffff" background-color="#263238" :default-active="$route.path" router unique-opened>
 			
-			<el-menu-item index="/index"><i class="el-icon-web-home"></i><span>主页</span></el-menu-item>
+			<el-menu-item index="/Index"><i class="el-icon-web-home"></i><span>主页</span></el-menu-item>
 			<el-submenu index="2">
 				<template slot="title"><i class="el-icon-web-clipboard"></i><span>楼盘管理</span></template>
 				<el-menu-item index="">
@@ -97,8 +97,12 @@
         	return {
             	uniqueOpened: true
         	}
+        },
+        created() {
+			console.log(this.$route.path);
         }
     }
+
 </script>
 <style scoped>
 	.sidebar {
