@@ -1,0 +1,96 @@
+<template>
+    <div v-loading="loading">
+        <div class="login-form">
+            <h2>用户登录</h2>
+            <el-form label-position="right" ref="loginForm" :model="loginForm" :rules="rules" status-icon>
+                <el-form-item prop="account">
+                    <el-input v-model="loginForm.account" placeholder="请输入手机号"></el-input>
+                </el-form-item>
+                <el-form-item prop="password">
+                    <el-input v-model="loginForm.password" type="password" placeholder="请输入密码"></el-input>
+                </el-form-item>
+                <el-form-item>
+                    <el-button type="primary" @click="submitForm('loginForm')">立即登录</el-button>
+                    <el-button @click="resetForm('loginForm')">重置</el-button>
+                </el-form-item>
+            </el-form>
+        </div>
+    </div>
+</template>
+
+<script>
+export default {
+    data () {
+        var validateAcc = (rule, value, callback) => {
+            var telmatch = /^1[0-9]{10}$/;
+            if (!value) {
+                return callback(new Error('请输入手机号'));
+            } else if (!telmatch.test(value)) {
+                return callback(new Error('请输入正确的手机号'));
+            } else {
+                callback();
+            }
+        }
+        var validatePwd = (rule, value, callback) => {
+            if (!value) {
+                return callback(new Error('请输入密码'));
+            } else if (value.length < 6) {
+                return callback(new Error('密码位数应不少于6位'));
+            } else {
+                callback();
+            }
+        }
+        return {
+            loginForm: {
+                account: '',
+                password: ''
+            },
+            rules: {
+                account: [
+                    { validator: validateAcc, trigger: 'blur' }
+                ],
+                password: [
+                    { validator: validatePwd, trigger: 'blur'}
+                ]
+            },
+            loading: true
+        }
+    },
+    mounted(){
+        this.loading = false;
+    },
+    methods: {
+        submitForm(formName) {
+            console.info(formName);
+            this.$refs[formName].validate((valid) => {
+                if (valid) {
+                    alert('submit!');
+                } else {
+                    console.log('error submit!!');
+                    return false;
+                }
+            });
+        },
+        resetForm(formName) {
+            this.$refs[formName].resetFields();
+        }
+    }
+}
+</script>
+<style scoped>
+    .login-form {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        padding: 50px;
+        width: 400px;
+        margin-left: -200px;
+        height: 300px;
+        margin-top: -300px;
+        border: 1px solid #eee;
+    }
+    .login-form h2 {
+        font-weight: normal;
+        text-align: center;
+    }
+</style>
