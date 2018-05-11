@@ -11,20 +11,20 @@
 				<el-menu-item index="/Estate/Dossier">
 					<span>房产档案</span>
 				</el-menu-item>
-				<el-menu-item index="">
+				<el-menu-item index="/Estate/Selling">
 					<span>放盘</span>
 				</el-menu-item>
 			</el-submenu>
 			<el-submenu index="4">
 				<template slot="title"><i class="el-icon-web-clipboard"></i><span>CRM</span></template>
-				<el-menu-item index="">
-					<span>销售线索</span>
+				<el-menu-item index="/CRM/Clues/Lists">
+					<span>线索客户</span>
 				</el-menu-item>
 				<el-menu-item index="">
 					<span>老客户</span>
 				</el-menu-item>
 				<el-menu-item index="">
-					<span>销售机会</span>
+					<span>机会客户</span>
 				</el-menu-item>
 				<el-menu-item index="">
 					<span>客户查询</span>
@@ -117,8 +117,5 @@
 		padding-bottom: 20px;
 		background: none;
 		border: none;
-	}
-	.el-submenu__title i,.el-menu-item i {
-		font-size: 14px;
 	}
 </style>

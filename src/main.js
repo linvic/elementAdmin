@@ -16,3 +16,27 @@ new Vue({
   components: { App },
   template: '<App/>'
 })
+
+Vue.prototype.setCookie = (name, value, days) => {
+
+    var d = new Date;
+
+    d.setTime(d.getTime() + 24*60*60*1000*days);
+
+    window.document.cookie = name + "=" + value + ";path=/;expires=" + d.toGMTString();
+
+}
+
+Vue.prototype.getCookie = (name) => {
+
+    var v = window.document.cookie.match('(^|;) ?' + name + '=([^;]*)(;|$)');
+
+    return v ? v[2] : null;
+
+}
+
+Vue.prototype.clearCookie = (name) => {
+
+    this.setCookie(name, '', -1);
+
+}

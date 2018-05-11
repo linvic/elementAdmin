@@ -168,9 +168,12 @@
                             </el-form-item>
                             <el-form-item label="房间功能：">
                                 <el-select v-model="room_form.room_feature">
-                                    <el-option label="F-1,F-2...F-9" value="A"></el-option>
-                                    <el-option label="001,002...009" value="B"></el-option>
+                                    <el-option label="商业住房" value="商业住房"></el-option>
+                                    <el-option label="居住住房" value="居住住房"></el-option>
                                 </el-select>
+                            </el-form-item>
+                            <el-form-item label="指导单价(元/平米)：">
+                                <el-input v-model="room_form.price" style="width: 100px"></el-input>
                             </el-form-item>
                         </el-col>
                     </el-row>
@@ -182,7 +185,8 @@
                     <el-table-column prop="floor_name" label="房间名称"></el-table-column>
                     <el-table-column prop="room_start" label="建筑面积(平米)"></el-table-column>
                     <el-table-column prop="room_end" label="使用面积(平米)"></el-table-column>
-                    <el-table-column prop="room_end" label="房间功能"></el-table-column>
+                    <el-table-column prop="room_feature" label="房间功能"></el-table-column>
+                    <el-table-column prop="price" label="指导单价(元/平米)"></el-table-column>
                     <el-table-column prop="remark" label="备注"></el-table-column>
                 </el-table>
                 <div class="m-t">
@@ -500,6 +504,7 @@ export default {
                     built_area: this.room_form.built_area, // 兼职面积
                     usable_area: this.room_form.usable_area, // 使用面积
                     room_feature: this.room_form.room_feature, // 房间功能
+                    price: this.room_form.price, // 单价
                     remark: "" // 备注
                 }
             }

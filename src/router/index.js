@@ -1,5 +1,6 @@
 import Vue from 'vue'
 import Router from 'vue-router'
+import axios from 'axios'
 
 Vue.use(Router)
 const router = new Router({
@@ -18,7 +19,8 @@ const router = new Router({
                     name: 'Index',
                     path: '/Index',
                     meta: {
-                        title: '主页'
+                        title: '主页',
+                        requireAuth: true
                     },
                     component: resolve => require(['../pages/Index'], resolve)
                 },
@@ -27,7 +29,8 @@ const router = new Router({
                     name: 'EstateGuide',
                     path: '/Estate/Guide',
                     meta: {
-                        title: '批量向导'
+                        title: '批量向导',
+                        requireAuth: true
                     },
                     component: resolve => require(['../pages/Estate/Guide'], resolve)
                 },
@@ -35,16 +38,37 @@ const router = new Router({
                     name: 'EstateDossier',
                     path: '/Estate/Dossier',
                     meta: {
-                        title: '房产档案'
+                        title: '房产档案',
+                        requireAuth: true
                     },
                     component: resolve => require(['../pages/Estate/Dossier'], resolve)
+                },
+                {
+                    name: 'EstateSelling',
+                    path: '/Estate/Selling',
+                    meta: {
+                        title: '房屋放盘',
+                        requireAuth: true
+                    },
+                    component: resolve => require(['../pages/Estate/Selling'], resolve)
+                },
+                // CRM
+                {
+                    name: 'CRM',
+                    path: '/CRM/Clues/Lists',
+                    meta: {
+                        title: '线索客户',
+                        requireAuth: true
+                    },
+                    component: resolve => require(['../pages/CRM/Clues/Lists'], resolve)
                 },
                 // 系统配置
                 {
                     name: 'DicList',
                     path: '/System/DataDic/DicList',
                     meta: {
-                        title: '数据字典'
+                        title: '数据字典',
+                        requireAuth: true
                     },
                     component: resolve => require(['../pages/System/DataDic/DicList'], resolve)
                 },
@@ -52,7 +76,8 @@ const router = new Router({
                     name: 'FollowUpSet',
                     path: '/System/Config/FollowUpSet',
                     meta: {
-                        title: '跟进配置'
+                        title: '跟进配置',
+                        requireAuth: true
                     },
                     component: resolve => require(['../pages/System/Config/FollowUpSet'], resolve)
                 },
@@ -60,7 +85,8 @@ const router = new Router({
                     name: 'StructureList',
                     path: '/System/Structure/List',
                     meta: {
-                        title: '组织架构'
+                        title: '组织架构',
+                        requireAuth: true
                     },
                     component: resolve => require(['../pages/System/Structure/List'], resolve)
                 },
@@ -68,7 +94,8 @@ const router = new Router({
                     name: 'PositionList',
                     path: '/System/Position/List',
                     meta: {
-                        title: '职位管理'
+                        title: '职位管理',
+                        requireAuth: true
                     },
                     component: resolve => require(['../pages/System/Position/List'], resolve)
                 },
@@ -76,7 +103,8 @@ const router = new Router({
                     name: 'RoleList',
                     path: '/System/Role/List',
                     meta: {
-                        title: '角色管理'
+                        title: '角色管理',
+                        requireAuth: true
                     },
                     component: resolve => require(['../pages/System/Role/List'], resolve)
                 },
@@ -84,7 +112,8 @@ const router = new Router({
                     name: 'UserList',
                     path: '/System/User/List',
                     meta: {
-                        title: '用户管理'
+                        title: '用户管理',
+                        requireAuth: true
                     },
                     component: resolve => require(['../pages/System/User/List'], resolve)
                 },
@@ -92,7 +121,8 @@ const router = new Router({
                     name: 'CustomerLeads',
                     path: '/Customer/Leads',
                     meta: {
-                        title: '销售线索管理-智领房产销售系统'
+                        title: '销售线索管理-智领房产销售系统',
+                        requireAuth: true
                     },
                     component: resolve => require(['../pages/Customer/Leads'], resolve)
                 }
@@ -102,7 +132,8 @@ const router = new Router({
             name: 'Login',
             path: '/Login',
             meta: {
-                title: '智领房产销售系统-用户登录'
+                title: '智领房产销售系统-用户登录',
+                requireAuth: false
             },
             component: resolve => require(['../pages/Login'], resolve)
         },
@@ -114,10 +145,122 @@ router.beforeEach((to, from, next) => {
     if (to.path === '/') {
         // 用户使用后退返回到授权页，则默认回到首页
         next('/Index')
-        return false
     }
-    next()
+
+    // 路由判断是否需要登录
+    if (to.meta.requireAuth) {
+
+        // 判断是否已登录
+        if (localStorage.getItem('UserAccount')) {
+            next()
+        } else { // 未登录
+            console.log('未登录')
+            next({
+                path: '/Login'
+            })
+        }
+    } else {
+        next()
+    }
+    
 })
+// 配置全局的axios
+Vue.prototype.$https = axios;
+axios.defaults.baseURL = 'http://dev.crm.zhiling.net.cn';
+axios.defaults.withCredentials = true; //让携带cookie
+//axios.defaults.baseURL = 'http://localhost:49764/';
+// !!! GET示例：
+// this.$https.get('/api/Dicts/GetValues', {
+//     params: {
+//         page: this.currentPage,
+//         page_size: this.pageSize,
+//         type_id: this.currentDicType,
+//         keyword: ''
+//     }
+// }).then((result) => {
+//     if (result.data.code == 0) {
+//         console.log(result.data);
+//     } else {
+//         this.$message({
+//             type: 'error',
+//             showClose: true,
+//             message: result.data.message
+//         })
+//     }
+// })
+// .catch((error) => {
+//     console.log('请求失败',error)
+// })
+// !!! POST示例:
+// this.$https.post('/api/Dicts/AppendTypes', {
+//     ParentId: this.form.ParentId,
+//     TypeName: this.form.TypeName,
+//     TypeCode: this.form.TypeCode,
+//     SortOrder: this.form.SortOrder,
+//     IsEnabled: this.form.IsEnabled,
+//     IsDeleted: false,
+//     TypeDesc: this.form.TypeDesc,
+// }).then((result) => {
+//     if (result.data.code == 0) {
+//         this.$message({
+//             type: 'success',
+//             showClose: true,
+//             message: '添加成功',
+//             onClose: () => {
+//                 // 关闭当前dialog，
+//                 this.closeDialog();
+//                 // 刷新列表
+//                 this.$emit('parentGetDataList');
+//             }
+//         })
+//     } else {
+//         this.$message({
+//             type: 'error',
+//             showClose: true,
+//             message: result.data.message
+//         })
+//     }
+// })
+// .catch((error) => {
+//     console.error('请求失败',error)
+// })
+
+// 添加请求拦截器
+axios.interceptors.request.use(
+    (config) => {
+        // config.headers['Content-Type'] = 'application/x-www-form-urlencoded' // 在拦截器中强制为，简单请求。
+        // 在发送请求之前做些什么
+        if (localStorage.getItem('Token')) {  // 判断是否存在token，如存在，则每个http header都加上token
+            config.headers.Authorization = 'Bearer ' + localStorage.getItem('Token');
+        }
+        return config;
+    },
+    (error) => {
+        // 对请求错误做些什么
+        return Promise.reject(error);
+    }
+    )
+
+// 添加响应拦截器
+axios.interceptors.response.use(
+    (response) => {
+        // 对响应数据做些什么
+        return response;
+    },
+    (error) => {
+        // 对响应错误做些什么
+        if(error.response) {
+            if(error.response.status === 401) {
+                // 401 未登陆 则需跳转登陆页
+                router.replace({
+                    path: '/Login'
+                })
+            }
+        }
+        return Promise.reject(error.response.data);
+    }
+    )
+
 
 // router.push('/service')
 export default router

@@ -4,7 +4,7 @@
             <h2>用户登录</h2>
             <el-form label-position="right" ref="loginForm" :model="loginForm" :rules="rules" status-icon>
                 <el-form-item prop="account">
-                    <el-input v-model="loginForm.account" placeholder="请输入手机号"></el-input>
+                    <el-input v-model="loginForm.account" placeholder="请输入账号"></el-input>
                 </el-form-item>
                 <el-form-item prop="password">
                     <el-input v-model="loginForm.password" type="password" placeholder="请输入密码"></el-input>
@@ -24,10 +24,12 @@ export default {
         var validateAcc = (rule, value, callback) => {
             var telmatch = /^1[0-9]{10}$/;
             if (!value) {
-                return callback(new Error('请输入手机号'));
-            } else if (!telmatch.test(value)) {
-                return callback(new Error('请输入正确的手机号'));
-            } else {
+                return callback(new Error('请输入账号'));
+            }
+            // else if (!telmatch.test(value)) {
+            //     return callback(new Error('请输入正确的手机号'));
+            // }
+            else {
                 callback();
             }
         }
@@ -61,12 +63,30 @@ export default {
     },
     methods: {
         submitForm(formName) {
-            console.info(formName);
             this.$refs[formName].validate((valid) => {
                 if (valid) {
-                    alert('submit!');
+                    this.$https.post('/api/Account/login', {
+                        user_account: this.loginForm.account,
+                        user_pwd: this.loginForm.password
+                    })
+                    .then((result) => {
+                        if (result.data.code == 0) {
+                            console.log(result.data);
+                            // 将当前登录账号存储
+                            localStorage.setItem('UserAccount', this.loginForm.account);
+                            this.$router.replace('/Index');
+                        } else {
+                            this.$message({
+                                type: 'error',
+                                showClose: true,
+                                message: result.data.message
+                            })
+                        }
+                    })
+                    .catch((error) => {
+                        console.log('登录请求失败',error)
+                    })
                 } else {
-                    console.log('error submit!!');
                     return false;
                 }
             });
