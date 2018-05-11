@@ -7,12 +7,6 @@
             </h1>
             <ul class="header_tool">
                 <li>
-                    <el-tooltip class="item" effect="dark" placement="bottom">
-                        <span slot="content">账号：{{UserAccount}}</span>
-                        <a href="javascript:;"><i class="el-icon-web-user"></i> </a>
-                    </el-tooltip>
-                </li>
-                <li>
                     <el-tooltip class="item" effect="dark" content="退出" placement="bottom">
                         <a href="javascript:;" @click="LogOff()"><i class="el-icon-web-sign-out"></i></a>
                     </el-tooltip>
@@ -26,11 +20,7 @@
 export default {
     data () {
         return {
-            UserAccount: ''
         }
-    },
-    created(){
-        this.UserAccount = localStorage.getItem('UserAccount');
     },
     methods: {
         // 退出登录
@@ -76,14 +66,13 @@ export default {
         float: right;
     }
     .header .header_tool li {
-        float: left;
         line-height: 60px;
     }
     .header .header_tool li a {
         position: relative;
         display: block;
-        padding-left: 20px;
-        padding-right: 20px;
+        padding-left: 25px;
+        padding-right: 25px;
         color: #fff;
     }
     .header .header_tool li a:hover {

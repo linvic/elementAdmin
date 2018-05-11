@@ -1,0 +1,190 @@
+<template>
+    <div>
+        
+        <el-container>
+            <el-aside width="200px">
+                <el-card>
+                    <div slot="header" class="clearfix">
+                        <span>字典分类</span>
+                        <el-button style="float: right; padding: 3px 0" type="text" @click="dialogDicType = true">分类配置</el-button>
+                    </div>
+                    <el-tree :data="dicData" :props="treeProps" default-expand-all :expand-on-click-node="false" @node-click="handleNodeClick" ref="tree"></el-tree>
+                </el-card>
+            </el-aside>
+            <el-main class="dicMain">
+                <el-card>
+                    <div slot="header" class="clearfix">
+                        <span>字典数据{{currentDicTypeTxt}}</span>
+                        <el-button-group style="float: right;">
+                            <el-button icon="el-icon-refresh" size="small" plain onclick="window.location.reload()">刷新</el-button>
+                            <el-button type="primary" icon="el-icon-circle-plus-outline" size="small" @click="dialogDicAdd = true">新增</el-button>
+                        </el-button-group>
+                    </div>
+                    
+                    <el-input
+                        placeholder="输入关键字进行过滤"
+                        v-model="filterText" suffix-icon="el-icon-search" style="max-width:320px;">
+                    </el-input>
+                    <el-table :data="tableData" style="width: 100%">
+                        <el-table-column prop="value_name" label="字典名" width="180"></el-table-column>
+                        <el-table-column prop="dicts_value" label="字典值"></el-table-column>
+                        <el-table-column prop="sort_order" label="排序"></el-table-column>
+                        <el-table-column label="是否默认">
+                            <template scope="scope">
+                                <span>{{ scope.row.is_default == 1 ? '是' : '否' }}</span>
+                            </template>
+                        </el-table-column>
+                        <el-table-column prop="Value_Desc" label="备注"></el-table-column>
+                        <el-table-column label="操作" width="180">
+                            <template slot-scope="scope">
+                                <el-button
+                                    size="mini"
+                                    plain
+                                    @click="dicEdit(scope.row.value_id)">编辑</el-button>
+                                <el-button
+                                    size="mini"
+                                    type="danger"
+                                    plain
+                                    @click="dicDelete(scope.row.value_id)">删除</el-button>
+                            </template>
+                        </el-table-column>
+                    </el-table>
+                    <div class="text-center m-t">
+                        <el-pagination
+                            @size-change="pageSizeChange"
+                            @current-change="pageIndexChange"
+                            :current-page="pageIndex"
+                            :page-sizes="[10, 15, 20, 30]"
+                            :page-size="pageSize"
+                            layout="total, sizes, prev, pager, next, jumper"
+                            :total="dataTotal">
+                        </el-pagination>
+                    </div>
+                </el-card>
+            </el-main>
+        </el-container>
+
+        <el-dialog v-if="dialogDicAdd" title="新增字典数据" :visible.sync="dialogDicAdd" append-to-body width="600px">
+            <DicAdd @closeDialog="closeDialog" @parentGetDataList="getDataList"></DicAdd>
+        </el-dialog>
+
+        <el-dialog v-if="dialogDicEdit" title="编辑字典数据" :visible.sync="dialogDicEdit" append-to-body width="600px">
+            <DicAdd @closeDialog="closeDialog" @parentGetDataList="getDataList" :id="editId"></DicAdd>
+        </el-dialog>
+        <el-dialog title="字典分类管理" :visible.sync="dialogDicType" fullscreen>
+         <!-- close="getDataList()" -->
+            <DicType></DicType>
+        </el-dialog>
+    </div>
+</template>
+
+<script>
+import DicAdd from './DicAdd'
+import DicType from './DicType'
+export default {
+    components: {
+        DicAdd,
+        DicType
+    },
+    data () {
+        return {
+            editId: null,
+            filterText: '', // tree 检索框
+            dicData: [],
+            treeProps: {
+                label: 'text',
+                children: 'children'
+            },
+            currentDicTypeTxt: '', // 当前选中的类别名称
+            currentDicType: 1, // 当前选中的类别名称
+            tableData: [],
+            dialogDicAdd: false, // 新增弹层
+            dialogDicEdit: false, // 新增弹层
+            dialogDicType: false, // 新增弹层
+            pageIndex: 1, // 当前页码
+            pageSize: 10, // 页码大小
+            dataTotal: 0 // 数据总数
+        }
+    },
+    created() {
+        this.getDataTree();
+        this.getDataList();
+    },
+    watch: {
+        filterText(val) {
+            this.pageIndex = 1;
+            this.pageSize = 10;
+            this.getDataList();
+        }
+    },
+    methods: {
+        getDataTree() {
+            this.$https.get('/api/Dicts/GetTypesTree').then((result) => {
+                if (result.data.code == 0) {
+                    this.dicData = result.data.data;
+                } else {
+                    this.$message({
+                        type: 'error',
+                        showClose: true,
+                        message: result.data.message
+                    })
+                }
+            })
+        },
+        // 获取字典值分页
+        getDataList() {
+            this.$https.get('/api/Dicts/GetValues', {
+                params: {
+                    page: this.pageIndex,
+                    page_size: this.pageSize,
+                    type_id: this.currentDicType,
+                    keyword: this.filterText
+                }
+            }).then((result) => {
+                if (result.data.code == 0) {
+                    this.tableData = result.data.data.Items;
+                } else {
+                    this.$message({
+                        type: 'error',
+                        showClose: true,
+                        message: result.data.message
+                    })
+                }
+            })
+        },
+        handleNodeClick(data) {
+            this.currentDicType = data.id;
+            this.filterText = '';
+            this.pageIndex = 1;
+            this.pageSize = 10;
+            this.currentDicTypeTxt = ' - ' + data.text;
+            this.getDataList();
+        },
+        closeDialog(name) {
+            this[name] = false;
+        },
+        dicEdit(id) { // 字典修改
+            console.log(id);
+            this.editId = Number(id);
+            this.dialogDicEdit = true;
+        },
+        dicDelete(index, row) { // 字典删除
+            console.log(index, row);
+        },
+        pageSizeChange(val) { // 分页：pageSize改变时
+            this.pageSize = val;
+            this.getDataList();
+        },
+        pageIndexChange(val) { // 分页：当前页码改变时
+            this.pageIndex = val;
+            this.getDataList();
+        }
+    }
+}
+</script>
+
+<style scoped>
+    .dicMain {
+        padding: 0px 0px 20px 20px;
+    }
+</style>

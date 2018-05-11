@@ -30,3 +30,11 @@
     	}
     }
 </script>
+<style scoped>
+    .content {
+        overflow-x: auto;
+    }
+    .content > div {
+        min-width: 800px;
+    }
+</style>

@@ -1,7 +1,7 @@
 <template>
     <div>
         <el-form ref="form" status-icon :rules="form_rules" :model="form" label-width="120px">
-            <el-form-item label="字典所属类别：" prop="TypeId">
+            <el-form-item label="父级：">
                 <el-cascader
                 :options="options"
                 :props="optionsProps"
@@ -12,20 +12,20 @@
                 @change="cascaderChange"
                 ></el-cascader>
             </el-form-item>
-            <el-form-item label="字典名称：" prop="ValueName">
-                <el-input v-model="form.ValueName"></el-input>
+            <el-form-item label="字典类别名称：" prop="TypeName">
+                <el-input v-model="form.TypeName"></el-input>
             </el-form-item>
-            <el-form-item label="字典值：" prop="DictsValue">
-                <el-input v-model="form.DictsValue"></el-input>
+            <el-form-item label="字典类编号：" prop="TypeCode">
+                <el-input v-model="form.TypeCode"></el-input>
             </el-form-item>
             <el-form-item label="排序：" prop="SortOrder">
                 <el-input v-model="form.SortOrder" type="number"></el-input>
             </el-form-item>
-            <el-form-item label="是否默认：">
-                <el-switch v-model="form.IsDefault"></el-switch>
+            <el-form-item label="是否有效：">
+                <el-switch v-model="form.IsEnabled"></el-switch>
             </el-form-item>
             <el-form-item label="备注：">
-                <el-input type="textarea" v-model="form.ValueDesc" :rows="3"></el-input>
+                <el-input type="textarea" v-model="form.TypeDesc" :rows="3"></el-input>
             </el-form-item>
             <el-form-item>
                 <el-button type="primary" @click="submit()">保存</el-button>
@@ -40,25 +40,22 @@ export default {
     data () {
         return {
             form: {
-                TypeId: null,
-                ValueName: '',
-                DictsValue: '',
+                ParentId: 0,
+                TypeName: '',
+                TypeCode: '',
                 SortOrder: null,
-                IsDefault: false,
-                ValueDesc: ''
+                IsEnabled: true,
+                TypeDesc: ''
             },
             form_rules: {
-                TypeId: [
-                    { required: true, message: '请选择所属类别', trigger: 'change' }
+                TypeName: [
+                    { required: true, message: '请输入字典类别名称', trigger: 'blur' }
                 ],
-                ValueName: [
-                    { required: true, message: '请输入字典名称', trigger: 'blur' }
-                ],
-                DictsValue: [
-                    { required: true, message: '请输入字典值', trigger: 'blur' }
+                TypeCode: [
+                    { required: true, message: '请输入字典类别编号', trigger: 'blur' }
                 ],
                 SortOrder: [
-                    { required: true, message: '请输入字典排序', trigger: 'blur' }
+                    { required: true, message: '请输入字典类别排序', trigger: 'blur' }
                 ]
             },
             optionsValue: [],
@@ -80,7 +77,7 @@ export default {
     },
     methods: {
         getDataTree() { // 获取树结构
-            this.$https.get('/api/Dicts/GetTypesTree').then((result) => {
+            this.$https.get('/api/Dicts/GetTypesTree?is_enabled=').then((result) => {
                 if (result.data.code == 0) {
                     this.options = result.data.data;
                     if (this.id) { // 编辑
@@ -98,17 +95,17 @@ export default {
         },
         getOldData() { // 获取编辑数据
 
-            this.$https.get('/api/Dicts/GetDictValue?value_id=' + this.id).then((result) => {
+            this.$https.get('/api/Dicts/GetTypesDetail?type_id=' + this.id).then((result) => {
                 if (result.data.code == 0) {
                     let _data = result.data.data;
-                    this.form.TypeId = _data.type_id;
-                    this.optionsValue = this.getTreeDeepArr(_data.type_id, this.options);
+                    this.form.ParentId = _data.parent_id;
+                    this.optionsValue = this.getTreeDeepArr(_data.parent_id, this.options);
             
-                    this.form.ValueName = _data.value_name;
-                    this.form.DictsValue = _data.value_code;
+                    this.form.TypeName = _data.type_name;
+                    this.form.TypeCode = _data.type_code;
                     this.form.SortOrder = _data.sort_order;
-                    this.form.IsDefault = _data.is_default === 1 ? true : false;
-                    this.form.ValueDesc = _data.value_desc;
+                    this.form.IsEnabled = _data.is_enabled;
+                    this.form.TypeDesc = _data.dicts_desc;
                 } else {
                     this.$message({
                         type: 'error',
@@ -122,18 +119,18 @@ export default {
             this.$refs.form.validate((valid) => {
                 if (valid) {
                     let _postData = {
-                        TypeId: this.form.TypeId,
-                        ValueName: this.form.ValueName,
-                        DictsValue: this.form.DictsValue,
+                        ParentId: this.form.ParentId,
+                        TypeName: this.form.TypeName,
+                        TypeCode: this.form.TypeCode,
                         SortOrder: this.form.SortOrder,
-                        IsDefault: this.form.IsDefault,
-                        IsEnabled: true,
+                        IsEnabled: this.form.IsEnabled,
                         IsDeleted: false,
-                        ValueDesc: this.form.ValueDesc
+                        TypeDesc: this.form.TypeDesc,
                     }
+
                     if (this.id) { // 编辑
-                        _postData.ValueId = parseInt(this.id);
-                        this.$https.post('/api/Dicts/UpdateValues', _postData).then((result) => {
+                        _postData.TypeId = parseInt(this.id);
+                        this.$https.post('/api/Dicts/UpdateTypes', _postData).then((result) => {
                             if (result.data.code == 0) {
                                 this.$message({
                                     type: 'success',
@@ -142,7 +139,7 @@ export default {
                                     duration: 1500,
                                     onClose: () => {
                                         // 关闭当前dialog，
-                                        this.closeDialog('dialogDicEdit');
+                                        this.closeDialog('dialogDicTypeEdit');
                                         // 刷新列表
                                         this.$emit('parentGetDataList');
                                     }
@@ -157,7 +154,7 @@ export default {
                         })
                     } else { // 新增
 
-                        this.$https.post('/api/Dicts/AppendValues', _postData).then((result) => {
+                        this.$https.post('/api/Dicts/AppendTypes', _postData).then((result) => {
                             if (result.data.code == 0) {
                                 this.$message({
                                     type: 'success',
@@ -166,7 +163,7 @@ export default {
                                     duration: 1500,
                                     onClose: () => {
                                         // 关闭当前dialog，
-                                        this.closeDialog('dialogDicAdd');
+                                        this.closeDialog('dialogDicTypeAdd');
                                         // 刷新列表
                                         this.$emit('parentGetDataList');
                                     }
@@ -191,14 +188,15 @@ export default {
         closeDialog(name) { // 关闭当前
             // this.$refs.form.resetFields(); // 重置表单
             if (!name) {
-                this.$emit('closeDialog', 'dialogDicAdd'); // 执行父组件关闭方法
-                this.$emit('closeDialog', 'dialogDicEdit'); // 执行父组件关闭方法
+                this.$emit('closeDialog', 'dialogDicTypeAdd'); // 执行父组件关闭方法
+                this.$emit('closeDialog', 'dialogDicTypeEdit'); // 执行父组件关闭方法
             } else {
                 this.$emit('closeDialog', name); // 执行父组件关闭方法
             }
         },
         cascaderChange(value) {
-            this.form.TypeId = value[value.length-1];
+            console.log(value[value.length-1]);
+            this.form.ParentId = value[value.length-1];
         },
         getTreeDeepArr(key, treeData) {
 

@@ -44,7 +44,7 @@ export default {
                 ValueName: '',
                 DictsValue: '',
                 SortOrder: null,
-                IsDefault: false,
+                IsDefault: true,
                 ValueDesc: ''
             },
             form_rules: {
