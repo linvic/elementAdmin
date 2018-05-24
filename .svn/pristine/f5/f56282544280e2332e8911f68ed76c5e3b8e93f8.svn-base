@@ -68,7 +68,7 @@
 </template>
 
 <script>
-import ContactsAdd from './../ContactsAdd'
+import ContactsAdd from './ContactsAdd'
 export default {
     components: {
         ContactsAdd

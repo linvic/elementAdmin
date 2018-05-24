@@ -2,7 +2,7 @@
     <div>
         <el-card>
             <div slot="header" class="clearfix">
-                <span>我的线索客户</span>
+                <span>我的老客户</span>
                 <el-button-group style="float: right;">
                     <el-button icon="el-icon-refresh" size="mini" plain onclick="window.location.reload()">刷新</el-button>
                 </el-button-group>
@@ -38,7 +38,7 @@
                 </el-col>
                 <el-col :span="12" class="text-right">
                     <el-button size="small" type="success" @click="followEdit()" icon="el-icon-upload">导入</el-button>
-                    <el-button size="small" type="primary" @click="dialogCluesAdd = true" icon="el-icon-circle-plus-outline">新增</el-button>
+                    <el-button size="small" type="primary" @click="dialogOldAdd = true" icon="el-icon-circle-plus-outline">新增</el-button>
                 </el-col>
             </el-row>
             <el-table :data="tableData" style="width: 100%" @selection-change="handleSelectionChange" v-loading="loading">
@@ -74,7 +74,7 @@
                         <el-button
                             size="mini"
                             type="success"
-                            @click="cluesToChance(scope.row.c_id)" plain>转机会客户</el-button>
+                            @click="oldToChance(scope.row.c_id)" plain>转机会客户</el-button>
                         <el-button
                             size="mini"
                             @click="cluesEdit(scope.$index, scope.row)" plain>需求</el-button>
@@ -94,32 +94,32 @@
                 </el-pagination>
             </div>
         </el-card>
-        <el-dialog v-if="dialogCluesAdd" title="新增线索客户" :visible.sync="dialogCluesAdd" append-to-body width="900px">
-            <CluesAdd @closeDialog="closeDialog" @parentGetDataList="getDataList"></CluesAdd>
+        <el-dialog v-if="dialogOldAdd" title="新增老客户" :visible.sync="dialogOldAdd" append-to-body width="1000px">
+            <OldAdd @closeDialog="closeDialog" @parentGetDataList="getDataList"></OldAdd>
         </el-dialog>
-        <el-dialog v-if="dialogCluesEdit" title="编辑线索客户" :visible.sync="dialogCluesEdit" append-to-body width="900px">
-            <CluesAdd @closeDialog="closeDialog" @parentGetDataList="getDataList" :id="editId"></CluesAdd>
+        <el-dialog v-if="dialogOldEdit" title="编辑老客户" :visible.sync="dialogOldEdit" append-to-body width="1000px">
+            <OldAdd @closeDialog="closeDialog" @parentGetDataList="getDataList" :id="editId"></OldAdd>
         </el-dialog>
         <el-dialog v-if="dialogFollowUp" title="跟进记录" :visible.sync="dialogFollowUp" append-to-body width="900px">
-            <FollowUp @closeDialog="closeDialog" @parentGetDataList="getDataList" :followData="FollowUpObj"></FollowUp>
+            <FollowUp @closeDialog="closeDialog" @parentGetDataList="getDataList" :followData="FollowUpObj" :isIntention="false"></FollowUp>
         </el-dialog>
 
-        <el-dialog v-if="dialogCluesToChance" title="线索客户转机会客户" :visible.sync="dialogCluesToChance" append-to-body width="900px">
-            <CluesToChance @closeDialog="closeDialog" @parentGetDataList="getDataList" :id="editId"></CluesToChance>
+        <el-dialog v-if="dialogOldToChance" title="老客户转机会客户" :visible.sync="dialogOldToChance" append-to-body width="900px">
+            <OldToChance @closeDialog="closeDialog" @parentGetDataList="getDataList" :id="editId"></OldToChance>
         </el-dialog>
     </div>
 </template>
 
 <script>
-import CluesAdd from './CluesAdd'
+import OldAdd from './OldAdd'
 import FollowUp from './../FollowUp'
-import CluesToChance from './CluesToChance'
+import OldToChance from './OldToChance'
 
 export default {
     components: {
-        CluesAdd,
+        OldAdd,
         FollowUp,
-        CluesToChance
+        OldToChance
     },
     data () {
         return {
@@ -140,10 +140,10 @@ export default {
             tableData: [],
             classification: [], // 字典 - 客户分类
             purchase_intention: [], // 字典 - 购买意向
-            dialogCluesAdd: false, //新增
-            dialogCluesEdit: false, //编辑
+            dialogOldAdd: false, //新增
+            dialogOldEdit: false, //编辑
             dialogFollowUp: false, //跟进记录
-            dialogCluesToChance: false // 转销售机会
+            dialogOldToChance: false // 转销售机会
         }
     },
     created() {
@@ -171,7 +171,7 @@ export default {
         },
         cluesEdit(id) { // 修改
             this.editId = Number(id);
-            this.dialogCluesEdit = true;
+            this.dialogOldEdit = true;
         },
         FollowUp(id, name, type) { // 更进记录
             this.FollowUpObj = {
@@ -181,9 +181,9 @@ export default {
             };
             this.dialogFollowUp = true;
         },
-        cluesToChance(id) {
+        oldToChance(id) {
             this.editId = Number(id);
-            this.dialogCluesToChance = true;
+            this.dialogOldToChance = true;
         },
         getDic(code, dic) { // 根据关键字获取字典值并保存 相应字段
             this.$https.get('/api/Dicts/GetValues', {
@@ -236,7 +236,7 @@ export default {
                 params: {
                     currentPage: this.pageIndex,
                     pageSize: this.pageSize,
-                    customer_classify: 0
+                    customer_classify: 2
                 }
             }).then((result) => {
                 if (result.data.code == 0) {

@@ -71,10 +71,3 @@ button, input, select, textarea {
 .p-r {
     padding-right: 20px;
 }
-.hr-line-dashed {
-    border-top: 1px dashed #e7eaec;
-    color: #fff;
-    background-color: #fff;
-    height: 1px;
-    margin: 20px 0;
-}

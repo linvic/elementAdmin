@@ -74,7 +74,7 @@
                         <el-button
                             size="mini"
                             type="success"
-                            @click="cluesToChance(scope.row.c_id)" plain>转机会客户</el-button>
+                            @click="dialogCluesToChance = true" plain>转机会客户</el-button>
                         <el-button
                             size="mini"
                             @click="cluesEdit(scope.$index, scope.row)" plain>需求</el-button>
@@ -104,15 +104,15 @@
             <FollowUp @closeDialog="closeDialog" @parentGetDataList="getDataList" :followData="FollowUpObj"></FollowUp>
         </el-dialog>
 
-        <el-dialog v-if="dialogCluesToChance" title="线索客户转机会客户" :visible.sync="dialogCluesToChance" append-to-body width="900px">
-            <CluesToChance @closeDialog="closeDialog" @parentGetDataList="getDataList" :id="editId"></CluesToChance>
+        <el-dialog title="线索客户转机会客户" :visible.sync="dialogCluesToChance" append-to-body>
+            <CluesToChance></CluesToChance>
         </el-dialog>
     </div>
 </template>
 
 <script>
 import CluesAdd from './CluesAdd'
-import FollowUp from './../FollowUp'
+import FollowUp from './FollowUp'
 import CluesToChance from './CluesToChance'
 
 export default {
@@ -180,10 +180,6 @@ export default {
                 type: type // 购买意向
             };
             this.dialogFollowUp = true;
-        },
-        cluesToChance(id) {
-            this.editId = Number(id);
-            this.dialogCluesToChance = true;
         },
         getDic(code, dic) { // 根据关键字获取字典值并保存 相应字段
             this.$https.get('/api/Dicts/GetValues', {

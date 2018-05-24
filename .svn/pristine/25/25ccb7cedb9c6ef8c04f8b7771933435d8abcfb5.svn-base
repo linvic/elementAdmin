@@ -13,13 +13,7 @@
     "build": "node build/build.js"
   },
   "dependencies": {
-    "babel-polyfill": "^6.26.0",
-    "browser-md5-file": "^1.0.0",
-    "date-fns": "^1.29.0",
     "element-ui": "^2.2.1",
-    "lodash": "^4.17.10",
-    "moment": "^2.22.1",
-    "url-join": "^4.0.0",
     "vue": "^2.5.2",
     "vue-router": "^3.0.1"
   },

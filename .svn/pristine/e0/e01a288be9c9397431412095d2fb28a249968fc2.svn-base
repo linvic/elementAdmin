@@ -7,28 +7,21 @@
                         <el-input v-model="form.building_code"></el-input>
                     </el-form-item>
                 </el-col>
-            </el-row>
-            <el-row>
                 <el-col :span="12">
-                    <el-form-item label="楼宇证件名称" prop="building_name">
-                        <el-input v-model="form.building_name" @input="form.building_alias_name = form.building_name"></el-input>
-                    </el-form-item>
-                </el-col>
-                <el-col :span="12">
-                    <el-form-item label="楼宇运营名称" prop="building_alias_name">
-                        <el-input v-model="form.building_alias_name"></el-input>
+                    <el-form-item label="楼宇名称" prop="building_name">
+                        <el-input v-model="form.building_name"></el-input>
                     </el-form-item>
                 </el-col>
             </el-row>
             <el-row>
                 <el-col :span="12">
                     <el-form-item label="楼层数量" prop="floor_amount">
-                        <el-input v-model="form.floor_amount" @keyup.native="onkeyupPlusInt($event)" placeholder="正整数"></el-input>
+                        <el-input v-model="form.floor_amount"></el-input>
                     </el-form-item>
                 </el-col>
                 <el-col :span="12">
                     <el-form-item label="建筑面积">
-                        <el-input v-model="form.building_area" @keyup.native="onkeyupPrice($event)" placeholder="数字，小数点两位，单位平方米">
+                        <el-input v-model="form.building_area" placeholder="数字，小数点两位，单位平方米">
                             <template slot="append">平方米</template>
                         </el-input>
                     </el-form-item>
@@ -37,14 +30,14 @@
             <el-row>
                 <el-col :span="12">
                     <el-form-item label="公摊面积">
-                        <el-input v-model="form.public_area" @keyup.native="onkeyupPrice($event)" placeholder="数字，小数点两位，单位平方米">
+                        <el-input v-model="form.public_area" placeholder="数字，小数点两位，单位平方米">
                             <template slot="append">平方米</template>
                         </el-input>
                     </el-form-item>
                 </el-col>
                 <el-col :span="12">
                     <el-form-item label="使用面积">
-                        <el-input v-model="form.usable_area" @keyup.native="onkeyupPrice($event)" placeholder="数字，小数点两位，单位平方米">
+                        <el-input v-model="form.usable_area" placeholder="数字，小数点两位，单位平方米">
                             <template slot="append">平方米</template>
                         </el-input>
                     </el-form-item>
@@ -128,7 +121,6 @@ export default {
             form: {
                 building_code: '', // 楼宇编码
                 building_name: '', // 楼宇名称
-                building_alias_name: '',//楼宇运营名称
                 floor_amount: '', // 楼层数量
                 building_function: '', // 楼宇功能
                 building_structure: '', // 结构类别
@@ -148,10 +140,7 @@ export default {
                     { required: true, message: '楼宇编码不能为空', trigger: 'blur'}
                 ],
                 building_name: [
-                    { required: true, message: '楼宇证件名称不能为空', trigger: 'blur'}
-                ],
-                building_alias_name: [
-                    { required: true, message: '楼宇运营名称不能为空', trigger: 'blur'}
+                    { required: true, message: '楼宇名称不能为空', trigger: 'blur'}
                 ],
                 floor_amount: [
                     { required: true, message: '楼层数量不能为空', trigger: 'blur'}
@@ -186,17 +175,15 @@ export default {
                 if (result.data.code == 0) {
                     let _data = result.data.data;
                     this.form.building_code  = _data.building_code; // 楼宇编码
-                    this.form.building_name  = _data.building_name; // 楼宇证件名称
-                    this.form.building_alias_name  = _data.building_alias_name; // 楼宇运营名称
-                    
+                    this.form.building_name  = _data.building_name; // 楼宇名称
                     this.form.floor_amount  = _data.floor_amount; // 楼层数量
                     this.form.building_function  = _data.building_function; // 楼宇功能
                     this.form.building_structure  = _data.building_structure; // 结构类别
                     this.form.building_decoration  = _data.building_decoration; // 装修标准
                     this.form.building_damage  = _data.building_damage; // 完损等级
-                    this.form.building_area  = _data.building_area == 0 ? '' : _data.building_area; // 建筑面积
-                    this.form.public_area  = _data.public_area == 0 ? '' : _data.public_area; // 公摊面积
-                    this.form.usable_area  = _data.usable_area == 0 ? '' : _data.usable_area; // 使用面积
+                    this.form.building_area  = _data.building_area; // 建筑面积
+                    this.form.public_area  = _data.public_area; // 公摊面积
+                    this.form.usable_area  = _data.usable_area; // 使用面积
                     this.form.building_permit  = _data.building_permit; // 建筑许可证
                     this.form.presale_permit  = _data.presale_permit; // 预售许可证
                     this.form.completion  = _data.completion; // 竣工日期
@@ -214,11 +201,8 @@ export default {
         submit() { // 提交
             this.$refs.form.validate((valid) => {
                 if (valid) {
-                    let _postData = JSON.parse(JSON.stringify(this.form));
+                    let _postData = this.form;
                     _postData.project_id = this.project_id;
-                    _postData.building_area  = this.form.building_area == '' ? 0 : this.form.building_area; // 建筑面积
-                    _postData.public_area  = this.form.public_area == '' ? 0 : this.form.public_area; // 公摊面积
-                    _postData.usable_area  = this.form.usable_area == '' ? 0 : this.form.usable_area; // 使用面积
                     if (this.id) { // 编辑
                         _postData.building_id = parseInt(this.id);
                         this.$https.post('/api/pms_base_buildings/ModifyBuilding', _postData).then((result) => {

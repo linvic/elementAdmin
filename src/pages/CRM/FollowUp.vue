@@ -1,0 +1,248 @@
+<template>
+    <div>
+        <el-form ref="form" :rules="form_rules" :model="form" label-width="120px" size="small">
+            <el-form-item label="当前客户名：">
+                <p>{{followData.name}}</p>
+            </el-form-item>
+            <el-form-item label="购买意向：" prop="purchase_intention" v-if="isIntention">
+                <el-select v-model="form.purchase_intention">
+                    <el-option v-for="item in purchase_intention" :key="item.value_id" :label="item.value_name" :value="String(item.value_id)">{{item.value_name}}</el-option>
+                </el-select>
+            </el-form-item>
+            <el-form-item label="跟进方式：" prop="communicate_type">
+                <el-radio-group v-model="form.communicate_type">
+                    <el-radio v-for="item in communicate_type" :key="item.value_id" :label="String(item.value_id)">{{item.value_name}}</el-radio>
+                </el-radio-group>
+            </el-form-item>
+            <el-form-item label="带看房源：" v-if="form.communicate_type == '5'">
+                <p class="text-info">待开发...</p>
+            </el-form-item>
+            <el-form-item label="跟进内容：" prop="communicate_remark">
+                <el-input type="textarea" v-model="form.communicate_remark" :rows="3"></el-input>
+            </el-form-item>
+            <el-form-item>
+                <PhotosUploader
+                    class="avatar-uploader"
+                    :limit="9"
+                    :files.sync="iconUrl">
+                </PhotosUploader>
+                <el-dialog :visible.sync="dialogVisible">
+                    <img width="100%" :src="dialogImageUrl" alt="">
+                </el-dialog>
+            </el-form-item>
+            <el-form-item>
+                <el-button type="primary" @click="submit()">保存</el-button>
+                <el-button @click="closeDialog()">取消</el-button>
+            </el-form-item>
+        </el-form>
+        <h3 class="table_title">历史跟进记录：</h3>
+        <el-table :data="tableData" style="width: 100%" border>
+            <el-table-column prop="created_user_name" label="跟进人"></el-table-column>
+            <el-table-column label="跟进方式">
+                <template slot-scope="scope">
+                    {{getDicVal(scope.row.communicate_type,'communicate_type')}}
+                </template>
+            </el-table-column>
+            <el-table-column prop="communicate_remark" label="跟进内容" width="400"></el-table-column>
+            <el-table-column prop="created_time" label="跟进时间"></el-table-column>
+        </el-table>
+    </div>
+</template>
+
+<script>
+import ContactsAdd from './ContactsAdd'
+import PhotosUploader from '@/components/uploader/PhotosUploader'
+export default {
+    components: {
+        ContactsAdd,
+        PhotosUploader
+    },
+    data () {
+        return {
+            dialogImageUrl: '',
+            dialogVisible: false,
+            iconUrl: [],
+            form: {
+                purchase_intention: '', // 购买意向
+                communicate_type: '1', //跟进方式
+                communicate_remark: '' // 跟进内容
+            },
+            form_rules: {
+                purchase_intention: [
+                    { required: true, message: '请选择购买意向', trigger: 'change'}
+                ],
+                communicate_type: [
+                    { required: true, message: '请选择跟进方式', trigger: 'change'}
+                ],
+                communicate_remark: [
+                    { required: true, message: '跟进内容不能为空', trigger: 'blur'}
+                ]
+            },
+            tableData: [],
+            purchase_intention: [], // 字典 - 购买意向
+            communicate_type: [{
+                value_id: '1',
+                value_name: '电话跟进'
+            },{
+                value_id: '2',
+                value_name: '上门拜访'
+            },{
+                value_id: '3',
+                value_name: '来访接待'
+            },{
+                value_id: '4',
+                value_name: '网络跟进'
+            },{
+                value_id: '5',
+                value_name: '带看房源'
+            }] // 跟进方式
+        }
+    },
+    props: {
+        followData: {
+            type: Object
+        },
+        isIntention: { // 是否传 购买意向
+            type: Boolean,
+            default: true
+        }
+    },
+    created() {
+        let _this = this;
+        this.$https.all([
+            this.getDic('crm_purchase_intention', 'purchase_intention')
+        ]).then(this.$https.spread(function (acct, perms) {
+            _this.getDataList();
+            if (_this.isIntention) {
+                _this.form.purchase_intention = _this.followData.type;
+            } else {
+                _this.form.purchase_intention = '0';
+            }
+            
+        }))
+    },
+    methods: {
+        handleRemove(file, fileList) {
+            console.log(file, fileList);
+        },
+        handlePictureCardPreview(file) {
+            this.dialogImageUrl = file.url;
+            this.dialogVisible = true;
+        },
+        getDataList() { // 获取数据列表
+
+            this.$https.get('/api/customer_communicate/list_customer_communicate?c_id=' + this.followData.id).then((result) => {
+                if (result.data.code == 0) {
+                    this.tableData = result.data.data;
+                } else {
+                    this.$message({
+                        type: 'error',
+                        showClose: true,
+                        message: result.data.message
+                    })
+                }
+            })
+        },
+        submit() { // 提交
+            this.$refs.form.validate((valid) => {
+                if (valid) {
+                    let _postData = JSON.parse(JSON.stringify(this.form));
+                    _postData.c_id = this.followData.id;
+                    _postData.communicate_file = this.iconUrl.join(',');
+                    this.$https.post('/api/customer_communicate/create_customer_communicate', _postData).then((result) => {
+                        if (result.data.code == 0) {
+                            this.$message({
+                                type: 'success',
+                                showClose: true,
+                                message: '新增成功',
+                                duration: 1000,
+                                onClose: () => {
+                                    // 刷新列表
+                                    this.getDataList();
+                                    this.form.communicate_type = '1';
+                                    this.form.communicate_remark = '';
+                                    this.iconUrl = [];
+                                }
+                            })
+                        } else {
+                            this.$message({
+                                type: 'error',
+                                showClose: true,
+                                message: result.data.message
+                            })
+                        }
+                    })
+                    
+
+                } else {
+                    console.error('验证失败');
+                    return false;
+                }
+            });
+        },
+        getDic(code, dic) { // 根据关键字获取字典值并保存 相应字段
+            this.$https.get('/api/Dicts/GetValues', {
+                params: {
+                    type_code: code
+                }
+            }).then((result) => {
+                if (result.data.code == 0) {
+                    this[dic] = result.data.data;
+                } else {
+                    this.$message({
+                        type: 'error',
+                        showClose: true,
+                        message: result.data.message
+                    })
+                }
+            })
+        },
+        getDicVal(key, dic) { // 根据字典值匹配字典名
+            let text = '';
+            for(var item of this[dic]) {
+                if (key == item.value_id) {
+                    text = item.value_name;
+                }
+            }
+            return text;
+        },
+        closeDialog(name) { // 关闭当前
+            // this.$refs.form.resetFields(); // 重置表单
+            if (!name) {
+                this.$emit('closeDialog', 'dialogFollowUp'); // 执行父组件关闭方法
+            } else {
+                this.$emit('closeDialog', name); // 执行父组件关闭方法
+            }
+        }
+    }
+}
+</script>
+<style scoped>
+    .avatar-uploader {
+        display: block;
+    }
+    .avatar-uploader /deep/ .el-upload {
+        width: 90px;
+        height: 90px;
+        line-height: 100px;
+    }
+    .avatar-uploader /deep/ .el-upload-list__item {
+        width: 90px;
+        height: 90px;
+    }
+    .avatar-uploader /deep/ .el-progress,.avatar-uploader /deep/ .el-progress-circle {
+        width: 70px !important;
+        height: 70px !important;
+    }
+    /* el-progress--circle */
+    .table_title {
+        display: inline-block;
+        margin-top: 30px;
+        margin-bottom: 30px;
+        color: #666;
+        font-weight: normal;
+        padding-left: 5px;
+        border-left: 2px solid #4E97D9;
+        line-height: 1.2;
+    }
+</style>

@@ -28,7 +28,7 @@
                 <el-row>
                     <el-col :span="12">
                         <el-form-item label="楼宇数量" prop="building_amount">
-                            <el-input v-model="project_form.building_amount" @keyup.native="onkeyupPlusInt($event)"></el-input>
+                            <el-input v-model="project_form.building_amount"></el-input>
                         </el-form-item>
                     </el-col>
                 </el-row>
@@ -49,7 +49,7 @@
                                 <span>{{ project_form.building_amount }}</span>
                             </el-form-item>
                             <el-form-item label="楼层数量：" prop="floor_amount">
-                                <el-input v-model="building_form.floor_amount" @keyup.native="onkeyupPlusInt($event)" style="width: 100px"></el-input>
+                                <el-input v-model="building_form.floor_amount" style="width: 100px"></el-input>
                             </el-form-item>
                             <el-form-item>
                                  提示：楼宇名称或楼层数量为空的记录将不能被保存！
@@ -80,8 +80,7 @@
                 <el-table :data="building_Table" style="width: 100%">
                     <el-table-column prop="id" label="序号"></el-table-column>
                     <el-table-column prop="building_code" label="楼宇编码" width="180"></el-table-column>
-                    <el-table-column prop="building_name" label="楼宇证件名称"></el-table-column>
-                    <el-table-column prop="building_alias_name" label="楼宇运营名称"></el-table-column>
+                    <el-table-column prop="building_name" label="楼宇名称"></el-table-column>
                     <el-table-column prop="floor_amount" label="楼层数量"></el-table-column>
                     <el-table-column prop="capped" label="封顶日期"></el-table-column>
                     <el-table-column prop="completion" label="竣工日期"></el-table-column>
@@ -97,7 +96,7 @@
                 </div>
             </div>
             <div v-if="step === 2">
-                <el-form ref="floor_form" :rules="floor_rules" :inline="true" :model="floor_form">
+                <el-form ref="floor_form" :inline="true" :model="floor_form">
                     <h3 class="form_title">配置楼层信息</h3>
 
                     <el-row>
@@ -106,11 +105,11 @@
                             <el-form-item label="楼层数量：">
                                 <span>{{ building_form.floor_amount }}</span>
                             </el-form-item>
-                            <el-form-item label="开始房号：" prop="room_start">
-                                <el-input v-model="floor_form.room_start" @keyup.native="onkeyupPlusInt($event)" style="width: 100px"></el-input>
+                            <el-form-item label="开始房号：">
+                                <el-input v-model="floor_form.room_start" style="width: 100px"></el-input>
                             </el-form-item>
-                            <el-form-item label="结束房号：" prop="room_end">
-                                <el-input v-model="floor_form.room_end" @keyup.native="onkeyupPlusInt($event)" style="width: 100px"></el-input>
+                            <el-form-item label="结束房号：">
+                                <el-input v-model="floor_form.room_end" style="width: 100px"></el-input>
                             </el-form-item>
                         </el-col>
                         <el-col :span="12" class="text-right">
@@ -160,18 +159,18 @@
                                 </el-select>
                             </el-form-item>
                             <el-form-item label="建筑面积：" prop="built_area">
-                                <el-input v-model="room_form.built_area" @keyup.native="onkeyupPrice($event)" style="width: 100px"></el-input>
+                                <el-input v-model="room_form.built_area" style="width: 100px"></el-input>
                             </el-form-item>
                             <el-form-item label="使用面积：" prop="usable_area">
-                                <el-input v-model="room_form.usable_area" @keyup.native="onkeyupPrice($event)" style="width: 100px"></el-input>
+                                <el-input v-model="room_form.usable_area" style="width: 100px"></el-input>
                             </el-form-item>
                             <el-form-item label="房间功能：" prop="room_feature">
                                 <el-select v-model="room_form.room_feature">
                                     <el-option v-for="item in estate_roomfunc" :key="item.value_id" :label="item.value_name" :value="item.value_id"></el-option>
                                 </el-select>
                             </el-form-item>
-                            <el-form-item label="指导单价(元/平米)：" prop="guide_price">
-                                <el-input v-model="room_form.guide_price" @keyup.native="onkeyupPrice($event)" style="width: 100px"></el-input>
+                            <el-form-item label="指导单价(元/平米)：" prop="guid_price">
+                                <el-input v-model="room_form.guid_price" style="width: 100px"></el-input>
                             </el-form-item>
                         </el-col>
                     </el-row>
@@ -184,7 +183,7 @@
                     <el-table-column prop="built_area" label="建筑面积(平米)"></el-table-column>
                     <el-table-column prop="usable_area" label="使用面积(平米)"></el-table-column>
                     <el-table-column prop="room_feature" label="房间功能"></el-table-column>
-                    <el-table-column prop="guide_price" label="指导单价(元/平米)"></el-table-column>
+                    <el-table-column prop="guid_price" label="指导单价(元/平米)"></el-table-column>
                     <el-table-column prop="remark" label="备注"></el-table-column>
                 </el-table>
                 <div class="m-t">
@@ -200,6 +199,17 @@ export default {
     components: {
     },
     data () {
+        var checkAmount = (rule, value, callback) => {
+            setTimeout(() => {
+                var isInteger = /^[1-9]\d*$/;
+                console.log(isInteger.test(value))
+                if (!isInteger.test(value)) {
+                    callback(new Error('请输入正整数'));
+                } else {
+                    callback();
+                }
+            },1000);
+        };
         return {
             step: 0, // 步骤
             project_id: 0, // 项目ID
@@ -208,7 +218,7 @@ export default {
             project_form: {
                 project_code: '',
                 project_name: '',
-                building_amount: ''
+                building_amount: null
             },
             project_rules: {
                 project_code: [
@@ -218,11 +228,12 @@ export default {
                     { required: true, message: '请填写', trigger: 'blur' }
                 ],
                 building_amount: [
-                    { required: true, message: '请填写', trigger: 'blur' }
+                    { required: true, message: '请填写', trigger: 'blur' },
+                    { validator: checkAmount, trigger: 'blur' }
                 ]
             },
             building_form: {
-                floor_amount: '',
+                floor_amount: null,
                 building_bmgs: 'A',
                 building_lymc: 'A'
             },
@@ -238,14 +249,6 @@ export default {
                 floor_bmgs: 'A',
                 floor_lcmc: 'A'
             },
-            floor_rules: {
-                room_start: [
-                    { required: true, message: '请填写', trigger: 'blur' }
-                ],
-                room_end: [
-                    { required: true, message: '请填写', trigger: 'blur' }
-                ]
-            },
             floor_Table: [],
             estate_roomfunc: [],
             room_form: {
@@ -254,7 +257,7 @@ export default {
                 built_area: 0,
                 usable_area: 0,
                 room_feature: '',
-                guide_price: ''
+                guid_price: ''
             },
             room_rules: {
                 built_area: [
@@ -266,7 +269,7 @@ export default {
                 room_feature: [
                     { required: true, message: '请选择', trigger: 'change' }
                 ],
-                guide_price: [
+                guid_price: [
                     { required: true, message: '请填写', trigger: 'blur' }
                 ]
             },
@@ -365,8 +368,7 @@ export default {
                 table_item[i] = {
                     id: i + 1,
                     building_code: '', // 楼宇编码
-                    building_name: '', // 楼宇证件名称
-                    building_alias_name: '', // 楼宇运营名称
+                    building_name: '', // 楼宇名称
                     floor_amount: this.building_form.floor_amount, // 楼层数量
                     building_function: 0, // 楼宇功能
                     building_structure: 0, // 结构类别
@@ -415,7 +417,6 @@ export default {
                         table_item[i].building_name = (i + 1) + '号厂房'; // 楼宇名称
                         break;
                 }
-                table_item[i].building_alias_name = table_item[i].building_name;
             }
             this.building_Table = table_item;
         },
@@ -617,7 +618,7 @@ export default {
                     built_area: this.room_form.built_area, // 兼职面积
                     usable_area: this.room_form.usable_area, // 使用面积
                     room_feature: this.getDicVal(this.room_form.room_feature, this.estate_roomfunc), // 房间功能
-                    guide_price: this.room_form.guide_price, // 单价
+                    guid_price: this.room_form.guid_price, // 单价
                     remark: "" // 备注
                 }
             }
@@ -702,7 +703,7 @@ export default {
                                     num_floor: (k + 1), // 楼层数
                                     built_area: this.room_form.built_area, // 建筑面积
                                     usable_area: this.room_form.usable_area, // 使用面积
-                                    guide_price: this.room_form.guide_price, // 单价
+                                    guid_price: this.room_form.guid_price, // 单价
                                     room_decoration: 0, // 装修
                                     room_unit: 0, // 户型
                                     room_toward: 0, // 朝向

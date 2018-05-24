@@ -54,7 +54,7 @@
                     <el-table :data="BuildingTable" style="width: 100%">
                         <el-table-column prop="building_id" label="ID"></el-table-column>
                         <el-table-column prop="building_code" label="楼宇编号"></el-table-column>
-                        <el-table-column prop="building_name" label="楼宇证件名称"></el-table-column>
+                        <el-table-column prop="building_name" label="楼宇名称"></el-table-column>
                         <el-table-column prop="building_area" label="建筑面积(平米)"></el-table-column>
                         <el-table-column prop="usable_area" label="使用面积(平米)"></el-table-column>
                         <el-table-column prop="floor_amount" label="楼层数量"></el-table-column>

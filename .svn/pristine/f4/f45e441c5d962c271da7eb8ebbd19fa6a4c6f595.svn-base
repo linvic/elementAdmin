@@ -71,7 +71,7 @@
         <el-dialog v-if="dialogDicEdit" title="编辑字典数据" :visible.sync="dialogDicEdit" append-to-body width="600px">
             <DicAdd @closeDialog="closeDialog" @parentGetDataList="getDataList" :id="editId"></DicAdd>
         </el-dialog>
-        <el-dialog title="字典分类管理" :visible.sync="dialogDicType" append-to-body width="1000px" @close="getDataTree()">
+        <el-dialog title="字典分类管理" :visible.sync="dialogDicType" fullscreen @close="getDataTree()">
             <DicType></DicType>
         </el-dialog>
     </div>
@@ -168,26 +168,8 @@ export default {
             this.editId = Number(id);
             this.dialogDicEdit = true;
         },
-        dicDelete(id) { // 字典删除
-            this.$https.post('/api/Dicts/DeleteValues?value_id=' + id).then((result) => {
-                if (result.data.code == 0) {
-                    this.$message({
-                        type: 'success',
-                        showClose: true,
-                        message: '删除成功',
-                        duration: 1500,
-                        onClose: () => {
-                            this.getDataList();
-                        }
-                    })
-                } else {
-                    this.$message({
-                        type: 'error',
-                        showClose: true,
-                        message: result.data.message
-                    })
-                }
-            })
+        dicDelete(index, row) { // 字典删除
+            console.log(index, row);
         },
         pageSizeChange(val) { // 分页：pageSize改变时
             this.pageSize = val;

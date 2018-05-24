@@ -1,6 +1,12 @@
 <template>
     <div>
         <el-form ref="form" :rules="form_rules" :model="form" label-width="120px" size="small">
+            <el-form-item label="客户姓名">
+                <p>{{form.customer_name}}</p>
+            </el-form-item>
+            <el-form-item label="客户联系电话">
+                <p>{{form.telephone}}</p>
+            </el-form-item>
             <el-form-item label="购买意向" prop="purchase_intention">
                 <el-radio-group v-model="form.purchase_intention">
                     <el-radio v-for="item in purchase_intention" :key="item.value_id" :label="String(item.value_id)">{{item.value_name}}</el-radio>
@@ -13,12 +19,6 @@
             </el-form-item>
             <el-form-item label="线索名称/主题" prop="theme">
                 <el-input v-model="form.theme" placeholder="请输入"></el-input>
-            </el-form-item>
-            <el-form-item label="客户姓名" prop="customer_name">
-                <el-input v-model="form.customer_name" placeholder="请输入"></el-input>
-            </el-form-item>
-            <el-form-item label="客户联系电话">
-                <p>{{form.telephone}}</p>
             </el-form-item>
             <el-form-item label="意向面积">
                 <el-input v-model="form.intentional_area" @keyup.native="onkeyupPrice($event)" placeholder="数字，小数点两位，单位平方米" type="number" style="width: 150px"></el-input> 平米
@@ -98,9 +98,6 @@ export default {
                 purchase_intention: [
                     { required: true, message: '请选择购买意向', trigger: 'change'}
                 ],
-                customer_name: [
-                    { required: true, message: '客户姓名不能为空', trigger: 'blur'}
-                ],
                 customer_type: [
                     { required: true, message: '请选择客户类别', trigger: 'change'}
                 ]
@@ -157,7 +154,6 @@ export default {
                     this.rawform.company_identification_number = _data.company_identification_number; // 
                     this.rawform.person_identification_type = _data.person_identification_type; // 
                     this.rawform.person_identification_number = _data.person_identification_number; // 
-
                 } else {
                     this.$message({
                         type: 'error',
@@ -223,7 +219,7 @@ export default {
                     }
                     _postData.classification = this.form.classification.join(',');
                     
-                    this.$https.post('/api/Customer/update_customer_clue_to_sale', _postData).then((result) => {
+                    this.$https.post('/api/Customer/update_customer_old_to_sale', _postData).then((result) => {
                         if (result.data.code == 0) {
                             this.$message({
                                 type: 'success',
@@ -283,7 +279,12 @@ export default {
 </script>
 <style scoped>
 
-    .el-radio-group{
+    .el-radio-group {
         line-height: 32px;
+        vertical-align: inherit;
+    }
+    .el-radio {
+        margin-left: 0;
+        margin-right: 30px;
     }
 </style>

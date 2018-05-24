@@ -16,14 +16,14 @@
             <el-row>
                 <el-col :span="12">
                     <el-form-item label="占地面积">
-                        <el-input v-model="form.total_area" @keyup.native="onkeyupPrice($event)" placeholder="数字，小数点两位，单位平方米">
+                        <el-input v-model="form.total_area" placeholder="数字，小数点两位，单位平方米">
                             <template slot="append">平方米</template>
                         </el-input>
                     </el-form-item>
                 </el-col>
                 <el-col :span="12">
                     <el-form-item label="建筑面积">
-                        <el-input v-model="form.built_area" @keyup.native="onkeyupPrice($event)" placeholder="数字，小数点两位，单位平方米">
+                        <el-input v-model="form.built_area" placeholder="数字，小数点两位，单位平方米">
                             <template slot="append">平方米</template>
                         </el-input>
                     </el-form-item>
@@ -32,14 +32,14 @@
             <el-row>
                 <el-col :span="12">
                     <el-form-item label="绿地面积">
-                        <el-input v-model="form.green_space" @keyup.native="onkeyupPrice($event)" placeholder="数字，小数点两位，单位平方米">
+                        <el-input v-model="form.green_space" placeholder="数字，小数点两位，单位平方米">
                             <template slot="append">平方米</template>
                         </el-input>
                     </el-form-item>
                 </el-col>
                 <el-col :span="12">
                     <el-form-item label="道路面积">
-                        <el-input v-model="form.road_space" @keyup.native="onkeyupPrice($event)" placeholder="数字，小数点两位，单位平方米">
+                        <el-input v-model="form.road_space" placeholder="数字，小数点两位，单位平方米">
                             <template slot="append">平方米</template>
                         </el-input>
                     </el-form-item>
@@ -48,7 +48,7 @@
             <el-row>
                 <el-col :span="12">
                     <el-form-item label="楼宇数量" prop="building_amount">
-                        <el-input v-model="form.building_amount" @keyup.native="onkeyupPlusInt($event)" placeholder="正整数"></el-input>
+                        <el-input v-model="form.building_amount"></el-input>
                     </el-form-item>
                 </el-col>
                 <el-col :span="12">
@@ -162,10 +162,10 @@ export default {
                     let _data = result.data.data;
                     this.form.project_code = _data.project_code; // 项目编码
                     this.form.project_name = _data.project_name; // 项目名称
-                    this.form.total_area = _data.total_area == 0 ? '' : _data.total_area; // 占地面积
-                    this.form.built_area = _data.built_area == 0 ? '' : _data.built_area; // 建筑面积
-                    this.form.green_space = _data.green_space == 0 ? '' : _data.green_space; // 绿地面积
-                    this.form.road_space = _data.road_space == 0 ? '' : _data.road_space; // 道路面积
+                    this.form.total_area = _data.total_area; // 占地面积
+                    this.form.built_area = _data.built_area; // 建筑面积
+                    this.form.green_space = _data.green_space; // 绿地面积
+                    this.form.road_space = _data.road_space; // 道路面积
                     this.form.building_amount = _data.building_amount; // 楼宇数量
                     this.form.charge = _data.charge; // 负责人
                     this.form.project_addr = _data.project_addr; // 项目地址
@@ -187,12 +187,7 @@ export default {
         submit() { // 提交
             this.$refs.form.validate((valid) => {
                 if (valid) {
-                    let _postData = JSON.parse(JSON.stringify(this.form));
-                    _postData.total_area = this.form.total_area == '' ? 0 : this.form.total_area; // 占地面积
-                    _postData.built_area = this.form.built_area == '' ? 0 : this.form.built_area; // 建筑面积
-                    _postData.green_space = this.form.green_space == '' ? 0 : this.form.green_space; // 绿地面积
-                    _postData.road_space = this.form.road_space == '' ? 0 : this.form.road_space;
-                    console.info(_postData);
+                    let _postData = this.form;
                     if (this.id) { // 编辑
                         _postData.project_id = parseInt(this.id);
                         this.$https.post('/api/pms_base_projects/UpdateProject', _postData).then((result) => {

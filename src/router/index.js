@@ -54,13 +54,22 @@ const router = new Router({
                 },
                 // CRM
                 {
-                    name: 'CRM',
+                    name: 'CluesLists',
                     path: '/CRM/Clues/Lists',
                     meta: {
                         title: '线索客户',
                         requireAuth: true
                     },
                     component: resolve => require(['../pages/CRM/Clues/Lists'], resolve)
+                },
+                {
+                    name: 'OldLists',
+                    path: '/CRM/Old/Lists',
+                    meta: {
+                        title: '老客户',
+                        requireAuth: true
+                    },
+                    component: resolve => require(['../pages/CRM/Old/Lists'], resolve)
                 },
                 // 系统配置
                 {

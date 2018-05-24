@@ -20,7 +20,7 @@
 				<el-menu-item index="/CRM/Clues/Lists">
 					<span>线索客户</span>
 				</el-menu-item>
-				<el-menu-item index="">
+				<el-menu-item index="/CRM/Old/Lists">
 					<span>老客户</span>
 				</el-menu-item>
 				<el-menu-item index="">
