@@ -1,0 +1,255 @@
+<template>
+    <div>
+        
+        <el-container>
+            <el-aside width="200px">
+                <el-card>
+                    <div slot="header" class="clearfix">
+                        <span>组织架构</span>
+                    </div>
+                    <el-tree :data="dicData" :props="treeProps" default-expand-all :expand-on-click-node="false" @node-click="handleNodeClick" ref="tree"></el-tree>
+                </el-card>
+            </el-aside>
+            <el-main class="dicMain">
+                <el-card>
+                    <div slot="header" class="clearfix">
+                        <span>用户管理{{currentUserTypeTxt}}</span>
+                        <el-button-group style="float: right;">
+                            <el-button icon="el-icon-refresh" size="small" plain onclick="window.location.reload()">刷新</el-button>
+                            <el-button type="primary" icon="el-icon-circle-plus-outline" size="small" @click="dialogUserAdd = true">新增</el-button>
+                        </el-button-group>
+                    </div>
+                    
+                    <el-input
+                        placeholder="输入关键字进行过滤"
+                        v-model="filterText" suffix-icon="el-icon-search" style="max-width:320px;">
+                    </el-input>
+                    <el-table :data="tableData" style="width: 100%" v-loading="loading">
+                        <el-table-column prop="user_id" label="用户ID" width="80"></el-table-column>
+                        <el-table-column prop="user_name" label="用户名"></el-table-column>
+                        <el-table-column prop="user_account" label="用户账号"></el-table-column>
+                        <el-table-column prop="user_telephone" label="用户手机号"></el-table-column>
+                        <el-table-column prop="create_time" label="创建时间"></el-table-column>
+                        <el-table-column label="状态">
+                            <template slot-scope="scope">
+                                <span>{{ scope.row.account_status === 1 ? '正常' : '禁用' }}</span>
+                            </template>
+                        </el-table-column>
+                        <el-table-column label="操作" width="380">
+                            <template slot-scope="scope">
+                                <el-button
+                                    size="mini"
+                                    plain
+                                    @click="changeState(scope.row.user_id, false)" v-if="scope.row.account_status===1">禁用</el-button>
+                                <el-button
+                                    size="mini"
+                                    plain
+                                    @click="changeState(scope.row.user_id, true)" v-else>启用</el-button>
+                                <el-button
+                                    size="mini"
+                                    type="danger"
+                                    plain
+                                    @click="resetPwd(scope.row.user_id)">重置密码</el-button>
+                                <el-button
+                                    size="mini"
+                                    type="primary"
+                                    plain
+                                    @click="dicEdit(scope.row.user_id)">编辑</el-button>
+                                <el-button
+                                    size="mini"
+                                    type="success"
+                                    plain
+                                    @click="dicDelete(scope.row.user_id)">角色配置</el-button>
+                            </template>
+                        </el-table-column>
+                    </el-table>
+                    <div class="text-center m-t">
+                        <el-pagination
+                            @size-change="pageSizeChange"
+                            @current-change="pageIndexChange"
+                            :current-page="pageIndex"
+                            :page-sizes="[10, 15, 20, 30]"
+                            :page-size="pageSize"
+                            layout="total, sizes, prev, pager, next, jumper"
+                            :total="dataTotal">
+                        </el-pagination>
+                    </div>
+                </el-card>
+            </el-main>
+        </el-container>
+
+        <el-dialog v-if="dialogUserAdd" title="新增用户" :visible.sync="dialogUserAdd" append-to-body width="900px">
+            <UserAdd @closeDialog="closeDialog" @parentGetDataList="getDataList" :pid="currentUserType"></UserAdd>
+        </el-dialog>
+
+        <el-dialog v-if="dialogUserEdit" title="编辑用户信息" :visible.sync="dialogUserEdit" append-to-body width="900px">
+            <UserAdd @closeDialog="closeDialog" @parentGetDataList="getDataList" :id="editId"></UserAdd>
+        </el-dialog>
+    </div>
+</template>
+
+<script>
+import UserAdd from './Add'
+export default {
+    components: {
+        UserAdd
+    },
+    data () {
+        return {
+            loading: false,
+            editId: null,
+            filterText: '', // tree 检索框
+            dicData: [],
+            treeProps: {
+                label: 'text',
+                children: 'children'
+            },
+            currentUserTypeTxt: '', // 当前选中的类别名称
+            currentUserType: 0, // 当前选中的类别名称
+            tableData: [],
+            dialogUserAdd: false, // 新增弹层
+            dialogUserEdit: false, // 新增弹层
+            pageIndex: 1, // 当前页码
+            pageSize: 10, // 页码大小
+            dataTotal: 0 // 数据总数
+        }
+    },
+    created() {
+        this.getDataTree();
+        this.getDataList();
+    },
+    watch: {
+        filterText(val) {
+            this.pageIndex = 1;
+            this.pageSize = 10;
+            this.getDataList();
+        }
+    },
+    methods: {
+        getDataTree() {
+            this.$https.get('/api/company_unit/GetUnitsTree').then((result) => {
+                if (result.data.code == 0) {
+                    this.dicData = result.data.data;
+                } else {
+                    this.$message({
+                        type: 'error',
+                        showClose: true,
+                        message: result.data.message
+                    })
+                }
+            })
+        },
+        // 获取字典值分页
+        getDataList() {
+            this.loading = true;
+            this.$https.get('/api/Account/page_users_seach_user_account_name', {
+                params: {
+                    currentPage: this.pageIndex,
+                    pageSize: this.pageSize,
+                    unit_id: this.currentUserType,
+                    keyword: this.filterText
+                }
+            }).then((result) => {
+                this.loading = false;
+                if (result.data.code == 0) {
+                    this.tableData = result.data.data.Items;
+                    this.dataTotal = result.data.data.Total;
+                } else {
+                    this.$message({
+                        type: 'error',
+                        showClose: true,
+                        message: result.data.message
+                    })
+                }
+            })
+        },
+        handleNodeClick(data) {
+            this.currentUserType = data.id;
+            this.filterText = '';
+            this.pageIndex = 1;
+            this.pageSize = 10;
+            this.currentUserTypeTxt = ' - ' + data.text;
+            this.getDataList();
+        },
+        closeDialog(name) {
+            this[name] = false;
+        },
+        dicEdit(id) { // 字典修改
+            this.editId = Number(id);
+            this.dialogUserEdit = true;
+        },
+        changeState(id, isOn) { // 启用禁用 isOn： true启用  false禁用
+            this.$https.post('/api/Account/update_users_status',{
+                user_id: id,
+                account_status: (isOn ? 1 : 0)
+            }).then((result) => {
+                if (result.data.code == 0) {
+                    let _message = isOn ? '启用成功' : '禁用成功';
+                    this.$message({
+                        type: 'success',
+                        showClose: true,
+                        message: _message,
+                        duration: 1500,
+                        onClose: () => {
+                            this.getDataList();
+                        }
+                    })
+                } else {
+                    this.$message({
+                        type: 'error',
+                        showClose: true,
+                        message: result.data.message
+                    })
+                }
+            })
+        },
+        resetPwd(id) {
+            this.$confirm('您确定要将该用户的密码重置为 888888 吗?', '提示', {
+                confirmButtonText: '确定',
+                cancelButtonText: '取消',
+                type: 'warning'
+            }).then(() => {
+                
+                this.$https.post('/api/Account/update_users_pwd_init',{
+                    user_id: id,
+                    user_pwd: '888888'
+                }).then((result) => {
+                    if (result.data.code == 0) {
+                        this.$message({
+                            type: 'success',
+                            showClose: true,
+                            message: '密码重置成功',
+                            duration: 1500,
+                            onClose: () => {
+                                this.getDataList();
+                            }
+                        })
+                    } else {
+                        this.$message({
+                            type: 'error',
+                            showClose: true,
+                            message: result.data.message
+                        })
+                    }
+                })
+
+            }).catch(() => {     
+            });
+        },
+        pageSizeChange(val) { // 分页：pageSize改变时
+            this.pageSize = val;
+            this.getDataList();
+        },
+        pageIndexChange(val) { // 分页：当前页码改变时
+            this.pageIndex = val;
+            this.getDataList();
+        }
+    }
+}
+</script>
+
+<style scoped>
+    .dicMain {
+        padding: 0px 0px 20px 20px;
+    }
+</style>

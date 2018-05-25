@@ -1,0 +1,261 @@
+<template>
+    <div>
+        <el-card>
+            <div slot="header" class="clearfix">
+                <span>我的老客户</span>
+                <el-button-group style="float: right;">
+                    <el-button icon="el-icon-refresh" size="mini" plain onclick="window.location.reload()">刷新</el-button>
+                </el-button-group>
+            </div>
+            <el-form :inline="true" :model="formFilter" class="demo-form-inline" size="small">
+                <el-form-item label="公司名称">
+                    <el-input v-model="formFilter.company_name" placeholder="请输入"></el-input>
+                </el-form-item>
+                <el-form-item label="联系人姓名">
+                    <el-input v-model="formFilter.user_name" placeholder="请输入"></el-input>
+                </el-form-item>
+                <el-form-item label="联系电话">
+                    <el-input v-model="formFilter.phone" placeholder="请输入"></el-input>
+                </el-form-item>
+                <el-form-item label="销售员">
+                    <el-input v-model="formFilter.sale" placeholder="请输入"></el-input>
+                </el-form-item>
+                <el-form-item label="主题">
+                    <el-input v-model="formFilter.theme" placeholder="请输入"></el-input>
+                </el-form-item>
+                <el-form-item>
+                    <el-button type="primary" @click="formFilterSubmit" icon="el-icon-search">查询</el-button>
+                </el-form-item>
+            </el-form>
+            <el-row>
+                <el-col :span="12">
+                    <el-button size="small" @click="followEdit()" icon="el-icon-delete">删除</el-button>
+                    <el-button size="small" type="info" @click="followEdit()" icon="el-icon-web-loop">变更业务员</el-button>
+                    购买意向：
+                    <el-select size="small" v-model="formFilter.theme">
+                        <el-option v-for="item in purchase_intention" :key="item.value_id" :label="item.value_name" :value="item.value_id"></el-option>
+                    </el-select>
+                </el-col>
+                <el-col :span="12" class="text-right">
+                    <el-button size="small" type="success" @click="followEdit()" icon="el-icon-upload">导入</el-button>
+                    <el-button size="small" type="primary" @click="dialogOldAdd = true" icon="el-icon-circle-plus-outline">新增</el-button>
+                </el-col>
+            </el-row>
+            <el-table :data="tableData" style="width: 100%" @selection-change="handleSelectionChange" v-loading="loading">
+                <el-table-column type="selection" width="55" prop="c_id"></el-table-column>
+                <el-table-column prop="c_id" label="ID" width="55"></el-table-column>
+                <el-table-column prop="theme" label="主题"></el-table-column>
+                <el-table-column prop="enterprise_name" label="公司名称"></el-table-column>
+                <el-table-column prop="customer_name" label="客户姓名"></el-table-column>
+                <el-table-column prop="telephone" label="联系电话"></el-table-column>
+                <el-table-column label="客户分类">
+                    <template slot-scope="scope">
+                        {{getDicVals(scope.row.classification, 'classification')}}
+                    </template>
+                </el-table-column>
+                <el-table-column label="购买意向">
+                    <template slot-scope="scope">
+                        {{getDicVal(scope.row.purchase_intention, 'purchase_intention')}}
+                    </template>
+                </el-table-column>
+                <el-table-column prop="intentional_area" label="意向面积"></el-table-column>
+                <el-table-column prop="user_id" label="销售员"></el-table-column>
+                <el-table-column prop="created_time" label="创建时间"></el-table-column>
+                <el-table-column label="操作" width="350">
+                    <template slot-scope="scope">
+                        <el-button
+                            size="mini"
+                            type="primary"
+                            @click="cluesEdit(scope.row.c_id)" plain>编辑</el-button>
+                        <el-button
+                            size="mini"
+                            type="warning"
+                            @click="FollowUp(scope.row.c_id, scope.row.customer_name, scope.row.purchase_intention)" plain>跟进记录</el-button>
+                        <el-button
+                            size="mini"
+                            type="success"
+                            @click="oldToChance(scope.row.c_id)" plain>转机会客户</el-button>
+                        <el-button
+                            size="mini"
+                            @click="cluesEdit(scope.$index, scope.row)" plain>需求</el-button>
+                    </template>
+                </el-table-column>
+            </el-table>
+            <!-- 分页 -->
+            <div class="text-center m-t">
+                <el-pagination
+                    @size-change="pageSizeChange"
+                    @current-change="pageIndexChange"
+                    :current-page="pageIndex"
+                    :page-sizes="[10, 15, 20, 30]"
+                    :page-size="pageSize"
+                    layout="total, sizes, prev, pager, next, jumper"
+                    :total="dataTotal">
+                </el-pagination>
+            </div>
+        </el-card>
+        <el-dialog v-if="dialogOldAdd" title="新增老客户" :visible.sync="dialogOldAdd" append-to-body width="1000px">
+            <OldAdd @closeDialog="closeDialog" @parentGetDataList="getDataList"></OldAdd>
+        </el-dialog>
+        <el-dialog v-if="dialogOldEdit" title="编辑老客户" :visible.sync="dialogOldEdit" append-to-body width="1000px">
+            <OldAdd @closeDialog="closeDialog" @parentGetDataList="getDataList" :id="editId"></OldAdd>
+        </el-dialog>
+        <el-dialog v-if="dialogFollowUp" title="跟进记录" :visible.sync="dialogFollowUp" append-to-body width="900px">
+            <FollowUp @closeDialog="closeDialog" @parentGetDataList="getDataList" :followData="FollowUpObj" :isIntention="false"></FollowUp>
+        </el-dialog>
+
+        <el-dialog v-if="dialogOldToChance" title="老客户转机会客户" :visible.sync="dialogOldToChance" append-to-body width="900px">
+            <OldToChance @closeDialog="closeDialog" @parentGetDataList="getDataList" :id="editId"></OldToChance>
+        </el-dialog>
+    </div>
+</template>
+
+<script>
+import OldAdd from './OldAdd'
+import FollowUp from './../FollowUp'
+import OldToChance from './OldToChance'
+
+export default {
+    components: {
+        OldAdd,
+        FollowUp,
+        OldToChance
+    },
+    data () {
+        return {
+            editId: null, // 编辑id
+            FollowUpObj: null, // 更进记录需要数据
+            pageIndex: 1, // 当前页码
+            pageSize: 10, // 页码大小
+            dataTotal: 0, // 数据总数
+            loading: true,
+            formFilter: {
+                company_name: '',
+                user_name: '',
+                phone: '',
+                sale: '',
+                theme: '',
+            }, // 检索
+            selectionChecked: [],
+            tableData: [],
+            classification: [], // 字典 - 客户分类
+            purchase_intention: [], // 字典 - 购买意向
+            dialogOldAdd: false, //新增
+            dialogOldEdit: false, //编辑
+            dialogFollowUp: false, //跟进记录
+            dialogOldToChance: false // 转销售机会
+        }
+    },
+    created() {
+        let _this = this;
+        this.$https.all([
+            this.getDic('crm_classification', 'classification'),
+            this.getDic('crm_purchase_intention', 'purchase_intention'),
+            this.getDataList()
+        ]).then(this.$https.spread(function (acct, perms) {
+        }))
+    },
+    watch: {
+    },
+    methods: {
+        pageSizeChange(val) { // 分页：pageSize改变时
+            this.pageSize = val;
+            this.getDataList();
+        },
+        pageIndexChange(val) { // 分页：当前页码改变时
+            this.pageIndex = val;
+            this.getDataList();
+        },
+        closeDialog(name) { // 关闭弹层
+            this[name] = false;
+        },
+        cluesEdit(id) { // 修改
+            this.editId = Number(id);
+            this.dialogOldEdit = true;
+        },
+        FollowUp(id, name, type) { // 更进记录
+            this.FollowUpObj = {
+                id: Number(id),
+                name: name,
+                type: type // 购买意向
+            };
+            this.dialogFollowUp = true;
+        },
+        oldToChance(id) {
+            this.editId = Number(id);
+            this.dialogOldToChance = true;
+        },
+        getDic(code, dic) { // 根据关键字获取字典值并保存 相应字段
+            this.$https.get('/api/Dicts/GetValues', {
+                params: {
+                    type_code: code
+                }
+            }).then((result) => {
+                if (result.data.code == 0) {
+                    this[dic] = result.data.data;
+                } else {
+                    this.$message({
+                        type: 'error',
+                        showClose: true,
+                        message: result.data.message
+                    })
+                }
+            })
+        },
+        getDicVal(key, dic) { // 根据字典值匹配字典名
+            let text = '';
+            for(var item of this[dic]) {
+                if (key == item.value_id) {
+                    text = item.value_name;
+                }
+            }
+            return text;
+        },
+        getDicVals(keys, dic) { // 根据字典值匹配字典名
+            let texts = [];
+            let keysArr = keys.split(',');
+            for(var keyItem of keysArr) {
+                for(var item of this[dic]) {
+                    if (keyItem == item.value_id) {
+                        texts.push(item.value_name);
+                    }
+                }
+            }
+            return texts.join(', ');
+        },
+        handleSelectionChange(val) { // 多选执行的方法
+            this.selectionChecked = val;
+            console.info(this.selectionChecked);
+        },
+        formFilterSubmit() { // 搜索查询按钮
+
+        },
+        getDataList() { // 分页获取
+            
+            this.$https.get('/api/Customer/page', {
+                params: {
+                    currentPage: this.pageIndex,
+                    pageSize: this.pageSize,
+                    customer_classify: 2
+                }
+            }).then((result) => {
+                if (result.data.code == 0) {
+                    this.tableData = result.data.data.Items;
+                    this.dataTotal = result.data.data.Total;
+
+                    this.loading = false;
+                } else {
+                    this.$message({
+                        type: 'error',
+                        showClose: true,
+                        message: result.data.message
+                    })
+                }
+            })
+        }
+    }
+}
+</script>
+
+<style scoped>
+</style>
