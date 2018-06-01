@@ -1,0 +1,143 @@
+<template>
+    <div>
+        <el-card>
+            <div slot="header" class="clearfix">
+                <span>删除申请</span>
+                <el-button-group style="float: right;">
+                    <el-button icon="el-icon-refresh" size="mini" plain onclick="window.location.reload()">刷新</el-button>
+                </el-button-group>
+            </div>
+            <el-table :data="tableData" style="width: 100%" v-loading="loading">
+                <el-table-column prop="id" label="ID" width="55"></el-table-column>
+                <el-table-column prop="created_user_name" label="申请人"></el-table-column>
+                <el-table-column prop="created_time" label="申请时间"></el-table-column>
+                <el-table-column prop="old_user_name" label="删除客户"></el-table-column>
+                <el-table-column prop="apply_remark" label="删除原因"></el-table-column>
+                <el-table-column label="状态">
+                    <template slot-scope="scope">
+                        <span>{{ scope.row.approve_status === 0 ? '拒绝' : (scope.row.approve_status === 1 ? '同意' : '未处理') }}</span>
+                    </template>
+                </el-table-column>
+                <el-table-column label="操作" width="150">
+                    <template slot-scope="scope">
+                        <el-button
+                            size="mini"
+                            plain
+                            type="primary"
+                            v-if="scope.row.approve_status === 2"
+                            @click="changeState(scope.row.id, true)">同意</el-button>
+                        <el-button
+                            size="mini"
+                            plain
+                            type="danger"
+                            v-if="scope.row.approve_status === 2"
+                            @click="changeState(scope.row.id, false)">驳回</el-button>
+                    </template>
+                </el-table-column>
+            </el-table>
+            <!-- 分页 -->
+            <div class="text-center m-t">
+                <el-pagination
+                    @size-change="pageSizeChange"
+                    @current-change="pageIndexChange"
+                    :current-page="pageIndex"
+                    :page-sizes="[10, 15, 20, 30]"
+                    :page-size="pageSize"
+                    layout="total, sizes, prev, pager, next, jumper"
+                    :total="dataTotal">
+                </el-pagination>
+            </div>
+        </el-card>
+    </div>
+</template>
+
+<script>
+
+export default {
+    data () {
+        return {
+            pageIndex: 1, // 当前页码
+            pageSize: 10, // 页码大小
+            dataTotal: 0, // 数据总数
+            loading: true,
+            tableData: []
+        }
+    },
+    created() {
+        this.getDataList()
+    },
+    watch: {
+    },
+    methods: {
+        pageSizeChange(val) { // 分页：pageSize改变时
+            this.pageSize = val;
+            this.getDataList();
+        },
+        pageIndexChange(val) { // 分页：当前页码改变时
+            this.pageIndex = val;
+            this.getDataList();
+        },
+        closeDialog(name) { // 关闭弹层
+            this[name] = false;
+        },
+        changeState(id, isOn) { // 是否同意 isOn
+            this.$prompt('请输入审批意见', '审批', {
+                inputType: 'textarea',
+                confirmButtonText: '确定',
+                cancelButtonText: '取消'
+            }).then(({ value }) => {
+
+                this.$https.post('/api/customer_delete_approve/update_customer_delete_approve',{
+                    id: id,
+                    approve_remark: value,
+                    approve_status: (isOn ? 1 : 0)
+                }).then((result) => {
+                    if (result.data.code == 0) {
+                        let _message = isOn ? '已同意删除' : '已拒绝删除';
+                        this.$message({
+                            type: 'success',
+                            showClose: true,
+                            message: _message,
+                            duration: 1500,
+                            onClose: () => {
+                                this.getDataList();
+                            }
+                        })
+                    } else {
+                        this.$message({
+                            type: 'error',
+                            showClose: true,
+                            message: result.data.message
+                        })
+                    }
+                })
+            })
+        },
+        getDataList() { // 分页获取
+            
+            this.$https.get('/api/customer_delete_approve/page', {
+                params: {
+                    currentPage: this.pageIndex,
+                    pageSize: this.pageSize,
+                    approve_status: 2
+                }
+            }).then((result) => {
+                if (result.data.code == 0) {
+                    this.tableData = result.data.data.Items;
+                    this.dataTotal = result.data.data.Total;
+                    this.loading = false;
+                } else {
+                    this.$message({
+                        type: 'error',
+                        showClose: true,
+                        message: result.data.message
+                    })
+                }
+            })
+        }
+    }
+}
+</script>
+
+<style scoped>
+</style>

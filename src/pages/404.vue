@@ -8,7 +8,7 @@
 export default {
     data () {
         return {
-            Text: '没有找到相关页面'
+            Text: '404没有找到相关页面'
         }
     }
 }

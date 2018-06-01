@@ -1,0 +1,145 @@
+<template>
+    <div>
+        <span>请勾选需要的功能:</span>
+        <div class="treeBox">
+            <el-tree
+                :data="treeData"
+                show-checkbox
+                :expand-on-click-node="false"
+                default-expand-all
+                node-key="id"
+                ref="tree"
+                highlight-current
+                @check-change="handleCheckChange"
+                :props="defaultProps">
+            </el-tree>
+        </div>
+        <div class="m-t text-center">
+            <el-button type="primary" @click="submit()">保存</el-button>
+            <el-button @click="closeDialog()">取消</el-button>
+        </div>
+    </div>
+</template>
+
+<script>
+export default {
+    data () {
+        return {
+            treeData: [],
+            defaultProps: {
+                label: 'text'
+            }
+        }
+    },
+    props: {
+        id: {
+            type: Number
+        }
+    },
+    created() {
+        this.getDataBase();
+
+    },
+    computed: {
+    },
+    watch: {
+    },
+    methods: {
+        getDataBase() { // 获取基础数据
+            this.$https.get('/api/company_role/list_module?status=1&parent_id=0').then((result) => {
+                if (result.data.code == 0) {
+                    this.treeData = result.data.data;
+                    this.getOldData(); // 获取原配置
+                } else {
+                    this.$message({
+                        type: 'error',
+                        showClose: true,
+                        message: result.data.message
+                    })
+                }
+            })
+        },
+        getOldData() { // 获取编辑数据
+
+            this.$https.get('/api/company_role/list_company_role_app_map?role_id=' + this.id).then((result) => {
+                if (result.data.code == 0) {
+                    let _data = result.data.data;
+                    for(var item of _data) {
+                        this.$refs.tree.setChecked(item.app_id, true, false);
+                    }
+                } else {
+                    this.$message({
+                        type: 'error',
+                        showClose: true,
+                        message: result.data.message
+                    })
+                }
+            })
+        },
+        submit() { // 提交
+            let checkedKeys = this.$refs.tree.getCheckedKeys();
+            let _postData = {
+                role_id: this.id,
+                list_app_id: checkedKeys
+            };
+            // for(var valItem of checkedKeys) {
+            //     let item = {
+            //         role_id: this.id,
+            //         app_id: valItem
+            //     }
+            //     _postData.push(item)
+            // }
+            // _postData.app_id = this.id;
+            // _postData.list_role_id = checkedKeys;
+
+            this.$https.post('/api/company_role/create_company_role_app_map', _postData).then((result) => {
+                if (result.data.code == 0) {
+                    this.$message({
+                        type: 'success',
+                        showClose: true,
+                        message: '配置成功',
+                        duration: 1500,
+                        onClose: () => {
+                            // 关闭当前dialog，
+                            this.closeDialog('dialogRolePower');
+                            // 刷新列表
+                            this.$emit('parentGetDataList');
+                        }
+                    })
+                } else {
+                    this.$message({
+                        type: 'error',
+                        showClose: true,
+                        message: result.data.message
+                    })
+                }
+            })
+        },
+        closeDialog(name) { // 关闭当前
+            // this.$refs.form.resetFields(); // 重置表单
+            if (!name) {
+                this.$emit('closeDialog', 'dialogRolePower'); // 执行父组件关闭方法
+            } else {
+                this.$emit('closeDialog', name); // 执行父组件关闭方法
+            }
+        },
+        handleCheckChange(node, checked, indeterminate) {
+            let _halfCheckedKeys = this.$refs.tree.getHalfCheckedKeys();
+            if(_halfCheckedKeys.length != 0) {
+                this.$refs.tree.setChecked(_halfCheckedKeys[0], true, false);
+            }
+            if (checked) {
+                this.$refs.tree.setChecked(node.parentId, true, false);
+            }
+        }
+    }
+}
+</script>
+<style scoped>
+    .treeBox {
+        border: 1px dashed #eaeefb;
+        padding: 10px 5px;
+        max-height: 400px;
+        overflow-y: auto;
+    }
+</style>
