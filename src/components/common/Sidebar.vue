@@ -59,6 +59,7 @@
 		left: 0;
 		width: 220px;
 		background: #263238;
+        overflow-y: auto;
 	}
 	.site-menu {
 		padding-bottom: 20px;

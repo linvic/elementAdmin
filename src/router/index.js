@@ -43,6 +43,15 @@ const router = new Router({
                     },
                     component: resolve => require(['../pages/Controls/ChangeSalesman/Lists'], resolve)
                 },
+                {
+                    name: 'MyApply',
+                    path: '/Controls/MyApply',
+                    meta: {
+                        title: '变更业务员',
+                        requireAuth: true
+                    },
+                    component: resolve => require(['../pages/Controls/MyApply'], resolve)
+                },
                 // 楼盘管理
                 {
                     name: 'EstateGuide',

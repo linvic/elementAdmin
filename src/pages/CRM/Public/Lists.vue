@@ -27,7 +27,8 @@
             <el-row>
                 <el-col :span="18">
                     <el-button size="small" @click="crmDel()" icon="el-icon-delete">删除</el-button>
-                    <el-select size="small" v-model="formFilter.classification" style="width: 150px;" placeholder="请选择客户类别">
+                    <el-select size="small" v-model="formFilter.classification" style="margin-left:20px;width: 150px;vertical-align: middle;" placeholder="请选择客户类别">
+                        <el-option label="所有客户类别" value=""></el-option>
                         <el-option v-for="item in classification" :key="item.value_id" :label="item.value_name" :value="item.value_id"></el-option>
                     </el-select>
                 </el-col>

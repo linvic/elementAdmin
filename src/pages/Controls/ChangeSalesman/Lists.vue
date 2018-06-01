@@ -7,6 +7,11 @@
                     <el-button icon="el-icon-refresh" size="mini" plain onclick="window.location.reload()">刷新</el-button>
                 </el-button-group>
             </div>
+            <el-tabs value="2" type="card" @tab-click="handleClick">
+                <el-tab-pane label="未处理" name="2"></el-tab-pane>
+                <el-tab-pane label="已同意" name="1"></el-tab-pane>
+                <el-tab-pane label="已拒绝" name="0"></el-tab-pane>
+            </el-tabs>
             <el-table :data="tableData" style="width: 100%" v-loading="loading">
                 <el-table-column prop="id" label="ID" width="55"></el-table-column>
                 <el-table-column prop="created_user_name" label="申请人"></el-table-column>
@@ -60,6 +65,7 @@ export default {
             pageSize: 10, // 页码大小
             dataTotal: 0, // 数据总数
             loading: true,
+            approve_status: '2',
             tableData: []
         }
     },
@@ -79,6 +85,10 @@ export default {
         },
         closeDialog(name) { // 关闭弹层
             this[name] = false;
+        },
+        handleClick(tab) {
+            this.approve_status = tab.name;
+            this.getDataList();
         },
         changeState(id, isOn) { // 是否同意 isOn
             this.$prompt('请输入审批意见', '审批', {
@@ -119,7 +129,7 @@ export default {
                 params: {
                     currentPage: this.pageIndex,
                     pageSize: this.pageSize,
-                    approve_status: 2
+                    approve_status: this.approve_status
                 }
             }).then((result) => {
                 if (result.data.code == 0) {

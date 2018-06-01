@@ -27,10 +27,12 @@
             <el-row>
                 <el-col :span="18">
                     <el-button size="small" @click="crmDel()" icon="el-icon-delete">删除</el-button>
-                    <el-select size="small" v-model="formFilter.user_id" style="width: 150px;margin-left:20px;" placeholder="请选择业务员">
+                    <el-select size="small" v-model="formFilter.user_id" style="width: 150px;margin-left:20px;vertical-align: middle;" placeholder="请选择业务员">
+                        <el-option label="本人" value="-2"></el-option>
                         <el-option v-for="item in roleunitUsers" :key="item.id" :label="item.name" :value="item.id"></el-option>
                     </el-select>
-                    <el-select size="small" v-model="formFilter.classification" style="width: 150px;" placeholder="请选择客户类别">
+                    <el-select size="small" v-model="formFilter.classification" style="width: 150px;vertical-align: middle;" placeholder="请选择客户类别">
+                        <el-option label="所有客户分类" value=""></el-option>
                         <el-option v-for="item in classification" :key="item.value_id" :label="item.value_name" :value="item.value_id"></el-option>
                     </el-select>
                 </el-col>
@@ -111,7 +113,7 @@ export default {
                 customer_name: '',// 联系人姓名
                 telephone: '',// 联系电话
                 theme: '',// 主题
-                user_id: '',// 查看谁的
+                user_id: '-2',// 查看谁的
                 classification: '' //购买意向
             }, // 检索
             searchForm: {

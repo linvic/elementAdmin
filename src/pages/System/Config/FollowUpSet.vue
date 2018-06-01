@@ -9,91 +9,73 @@
             </div>
             <el-table :data="tableData" style="width: 100%">
                 <el-table-column prop="id" label="类目ID" width="180"></el-table-column>
-                <el-table-column prop="name" label="设置类目名称"></el-table-column>
-                <el-table-column prop="rimind_time" label="提醒时间"></el-table-column>
-                <el-table-column prop="limited_time" label="限定时间"></el-table-column>
+                <el-table-column prop="config_code" label="类目Code" width="180"></el-table-column>
+                <el-table-column prop="config_name" label="设置类目名称"></el-table-column>
+                <el-table-column prop="config_titps" label="提醒时间"></el-table-column>
+                <el-table-column label="限定时间">
+                    <template slot-scope="scope">
+                        {{scope.row.config_value + (scope.row.config_unit === 1 ? '小时' : '天')}}
+                    </template>
+                </el-table-column>
                 <el-table-column label="操作" width="180">
                     <template slot-scope="scope">
                         <el-button
                             size="mini"
-                            @click="followEdit(scope.$index, scope.row)">编辑</el-button>
+                            @click="followEdit(scope.row)">编辑</el-button>
                     </template>
                 </el-table-column>
             </el-table>
-            <div class="text-center m-t">
-                <el-pagination
-                    @size-change="pageSizeChange"
-                    @current-change="currentPageChange"
-                    :current-page="currentPage"
-                    :page-sizes="[10, 50, 100, 200]"
-                    :page-size="10"
-                    layout="total, sizes, prev, pager, next, jumper"
-                    :total="400">
-                </el-pagination>
-            </div>
         </el-card>
+        <el-dialog v-if="dialogFollowEdit" title="修改配置" :visible.sync="dialogFollowEdit" append-to-body width="500px">
+            <FollowEdit @closeDialog="closeDialog" @parentGetDataList="getDataList" :oldData="editData"></FollowEdit>
+        </el-dialog>
     </div>
 </template>
 
 <script>
+import FollowEdit from './FollowEdit'
 export default {
+    components: {
+        FollowEdit
+    },
     data () {
         return {
-            tableData: [{
-                id: '1',
-                name: '新线索跟进提醒',
-                rimind_time: '公开前',
-                limited_time: '48小时'
-            }, {
-                id: '2',
-                name: '崔收款提醒',
-                rimind_time: '交款前',
-                limited_time: '24小时'
-            }, {
-                id: '3',
-                name: 'A类客户跟进时间',
-                rimind_time: '距离上次跟进日期10天',
-                limited_time: '15天'
-            }, {
-                id: '4',
-                name: 'B类客户跟进时间',
-                rimind_time: '距离上次跟进日期10天',
-                limited_time: '15天'
-            }, {
-                id: '5',
-                name: 'C类客户跟进时间',
-                rimind_time: '距离上次跟进日期10天',
-                limited_time: '15天'
-            }, {
-                id: '6',
-                name: 'D类客户跟进时间',
-                rimind_time: '距离上次跟进日期',
-                limited_time: '15天'
-            }, {
-                id: '7',
-                name: 'E类客户跟进时间',
-                rimind_time: '距离上次跟进日期',
-                limited_time: '15天'
-            }, {
-                id: '8',
-                name: 'F类客户跟进时间',
-                rimind_time: '距离上次跟进日期',
-                limited_time: '15天'
-            }],
-            currentPage: 1 // 当前页码
+            tableData: [],
+            editCode: null,
+            dialogFollowEdit: false
+
         }
     },
     watch: {
     },
+    created() {
+        this.getDataList()
+    },
     methods: {
-        followEdit(index, row) { // 修改
-            console.log(index, row);
+        followEdit(rowData) { // 修改
+            this.editData = {
+                config_code: rowData.config_code,
+                config_value: rowData.config_value.toString(),
+                config_unit: rowData.config_unit.toString()
+            }
+            this.dialogFollowEdit = true;
         },
-        pageSizeChange(val) { // 分页：pageSize改变时
-            console.log(`每页 ${val} 条`);
+        closeDialog(name) { // 关闭弹层
+            this[name] = false;
         },
-        currentPageChange(val) { // 分页：当前页码改变时
-            console.log(`当前页: ${val}`);
+        getDataList() {
+
+            this.$https.get('/api/system_config/list_system_config_communicate').then((result) => {
+                if (result.data.code == 0) {
+                    this.tableData = result.data.data;
+                } else {
+                    this.$message({
+                        type: 'error',
+                        showClose: true,
+                        message: result.data.message
+                    })
+                }
+            })
         }
     }
 }

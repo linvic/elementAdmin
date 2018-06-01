@@ -234,12 +234,12 @@ export default {
         
         var existPhone = (rule, value, callback) => {
             if (value) {
-                this.$https.get('/api/Customer/exist_telephone?telephone=' + this.form.telephone ).then((result) => {
+                this.$https.get('/api/Customer/get_model_by_telephone?telephone=' + this.form.telephone ).then((result) => {
                     if (result.data.code == 0) {
                         callback(new Error('联系号码已存在'));
                         let c_id = result.data.data.c_id;
                         let old_user_id = result.data.data.user_id;
-                        this.$confirm('联系号码已存在,此客户现归属于业务员（'+result.data.data.user_name+'），您可申请仲裁', '提示', {
+                        this.$confirm('联系号码已存在' + (result.data.data.user_name ? ', 此客户现归属于业务员（' + result.data.data.user_name + '）' : '') + '，您可申请仲裁', '提示', {
                             confirmButtonText: '申请仲裁',
                             cancelButtonText: '取消',
                             type: 'warning'

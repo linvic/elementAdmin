@@ -40,14 +40,14 @@
                     </el-form-item>
                 </el-col>
                 <el-col :span="12">
-                    <el-form-item label="工号" prop="job_number">
+                    <el-form-item label="工号">
                         <el-input v-model="form.job_number"></el-input>
                     </el-form-item>
                 </el-col>
             </el-row>
             <el-row>
                 <el-col :span="24">
-                    <el-form-item label="工作照" prop="user_img">
+                    <el-form-item label="工作照">
                         <PhotoUploader
                             :files.sync="form.user_img">
                         </PhotoUploader>
@@ -63,7 +63,7 @@
                     </el-form-item>
                 </el-col>
                 <el-col :span="12">
-                    <el-form-item label="电子邮箱" prop="user_email">
+                    <el-form-item label="电子邮箱">
                         <el-input v-model="form.user_email"></el-input>
                     </el-form-item>
                 </el-col>
@@ -121,17 +121,8 @@ export default {
                 user_name: [
                     { required: true, message: '请输入用户姓名', trigger: 'blur' }
                 ],
-                job_number: [
-                    { required: true, message: '请输入用户工号', trigger: 'blur' }
-                ],
-                user_img: [
-                    { required: true, message: '请上传工作照', trigger: 'blur' }
-                ],
                 position_id: [
                     { required: true, message: '请选择所属职位', trigger: 'change' }
-                ],
-                user_email: [
-                    { required: true, message: '请输入电子邮箱', trigger: 'blur' }
                 ],
                 user_desc: [
                     { required: true, message: '请输入用户备注', trigger: 'blur' }
