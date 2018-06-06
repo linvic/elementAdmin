@@ -47,7 +47,11 @@
                 <el-table-column type="selection" width="55" prop="c_id"></el-table-column>
                 <el-table-column prop="c_id" label="ID" width="55"></el-table-column>
                 <el-table-column prop="enterprise_name" label="公司名称"></el-table-column>
-                <el-table-column prop="customer_name" label="客户姓名"></el-table-column>
+                <el-table-column label="客户姓名">
+                    <template slot-scope="scope">
+                        <a href="javascript:;" @click="openDetails(scope.row.c_id)">{{scope.row.customer_name}}</a>
+                    </template>
+                </el-table-column>
                 <el-table-column prop="telephone" label="联系电话"></el-table-column>
                 <el-table-column label="客户分类">
                     <template slot-scope="scope">
@@ -105,6 +109,10 @@
         <el-dialog v-if="dialogOldToChance" title="老客户转机会客户" :visible.sync="dialogOldToChance" append-to-body width="900px">
             <OldToChance @closeDialog="closeDialog" @parentGetDataList="getDataList" :id="editId"></OldToChance>
         </el-dialog>
+
+        <el-dialog v-if="dialogDetails" title="客户详情" :visible.sync="dialogDetails" append-to-body width="1000px">
+            <Details @closeDialog="closeDialog" :id="editId"></Details>
+        </el-dialog>
     </div>
 </template>
 
@@ -112,12 +120,14 @@
 import OldAdd from './OldAdd'
 import FollowUp from './../FollowUp'
 import OldToChance from './OldToChance'
+import Details from './../Details'
 
 export default {
     components: {
         OldAdd,
         FollowUp,
-        OldToChance
+        OldToChance,
+        Details
     },
     data () {
         return {
@@ -148,8 +158,10 @@ export default {
             roleunitUsers: [], // 所属业务员
             dialogOldAdd: false, //新增
             dialogOldEdit: false, //编辑
+            dialogDetails: false, // 详情
             dialogFollowUp: false, //跟进记录
             dialogOldToChance: false // 转销售机会
+
         }
     },
     created() {
@@ -185,6 +197,10 @@ export default {
         cluesEdit(id) { // 修改
             this.editId = Number(id);
             this.dialogOldEdit = true;
+        },
+        openDetails(id) { // 详情
+            this.editId = Number(id);
+            this.dialogDetails = true;
         },
         FollowUp(id, name, type) { // 更进记录
             this.FollowUpObj = {

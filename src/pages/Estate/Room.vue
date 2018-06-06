@@ -157,6 +157,13 @@
 <script>
 export default {
     data () {
+        var checkNumFloor = (rule, value, callback) => {
+            if (value > 255 || value < 0) {
+                callback(new Error('楼层数不能大于255'));
+            } else {
+                callback();
+            }
+        };
         return {
             form: {
                 room_code: '', // 房间编码
@@ -193,7 +200,8 @@ export default {
                     { required: true, message: '建筑面积不能为空', trigger: 'blur'}
                 ],
                 num_floor: [
-                    { required: true, message: '楼层数不能为空', trigger: 'blur'}
+                    { required: true, message: '楼层数不能为空', trigger: 'blur'},
+                    { validator: checkNumFloor,  trigger: 'blur'}
                 ],
                 guide_price: [
                     { required: true, message: '指导单价不能为空', trigger: 'blur'}
@@ -252,7 +260,7 @@ export default {
                     let _data = result.data.data;
                     this.form.room_code = _data.room_code; // 房间编码
                     this.form.room_name = _data.room_name; // 房间名称
-                    this.form.room_feature = _data.room_feature; // 房间功能
+                    this.form.room_feature = _data.room_feature == 0 ? '' :_data.room_feature; // 房间功能
                     this.form.room_decoration = _data.room_decoration == 0 ? '' :_data.room_decoration; // 装修
                     this.form.room_unit = _data.room_unit == 0 ? '' :_data.room_unit; // 户型
                     this.form.room_toward = _data.room_toward == 0 ? '' :_data.room_toward; // 朝向
@@ -288,7 +296,8 @@ export default {
                     _postData.parking_area = 0; // 车位面积
                     _postData.full_name = this.all_name + this.form.room_name; // 房间完整名称
 
-                    _postData.room_decoration = this.form.room_decoration == 0 ? '' :this.form.room_decoration; // 装修
+                    _postData.room_feature = this.form.room_feature == '' ? 0 :this.form.room_feature; // 装修
+                    _postData.room_decoration = this.form.room_decoration == '' ? 0 :this.form.room_decoration; // 装修
                     _postData.room_unit = this.form.room_unit == '' ? 0 :this.form.room_unit; // 户型
                     _postData.room_toward = this.form.room_toward == '' ? 0 :this.form.room_toward; // 朝向
                     _postData.built_area = this.form.built_area == '' ? 0 :this.form.built_area; // 建筑面积

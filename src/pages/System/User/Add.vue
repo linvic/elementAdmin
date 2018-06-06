@@ -16,7 +16,7 @@
             <el-row>
                 <el-col :span="12">
                     <el-form-item label="账号" prop="user_account">
-                        <el-input v-model="form.user_account"></el-input>
+                        <el-input v-model="form.user_account" :disabled="id !== undefined"></el-input>
                     </el-form-item>
                 </el-col>
                 <el-col :span="12">
@@ -147,6 +147,7 @@ export default {
         }
     },
     created() {
+        console.log(this.id)
         this.getDataTree();
     },
     computed: {

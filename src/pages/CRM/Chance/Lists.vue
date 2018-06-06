@@ -47,7 +47,11 @@
                 <el-table-column prop="c_id" label="ID" width="55"></el-table-column>
                 <el-table-column prop="theme" label="主题"></el-table-column>
                 <el-table-column prop="enterprise_name" label="公司名称"></el-table-column>
-                <el-table-column prop="customer_name" label="客户姓名"></el-table-column>
+                <el-table-column label="客户姓名">
+                    <template slot-scope="scope">
+                        <a href="javascript:;" @click="openDetails(scope.row.c_id)">{{scope.row.customer_name}}</a>
+                    </template>
+                </el-table-column>
                 <el-table-column prop="telephone" label="联系电话"></el-table-column>
                 <el-table-column label="客户分类">
                     <template slot-scope="scope">
@@ -90,15 +94,20 @@
         <el-dialog v-if="dialogFollowUp" title="跟进记录" :visible.sync="dialogFollowUp" append-to-body width="900px">
             <FollowUp @closeDialog="closeDialog" @parentGetDataList="getDataList" :followData="FollowUpObj" :isIntention="false"></FollowUp>
         </el-dialog>
+        <el-dialog v-if="dialogDetails" title="客户详情" :visible.sync="dialogDetails" append-to-body width="1000px">
+            <Details @closeDialog="closeDialog" :id="editId"></Details>
+        </el-dialog>
     </div>
 </template>
 
 <script>
 import FollowUp from './../FollowUp'
+import Details from './../Details'
 
 export default {
     components: {
-        FollowUp
+        FollowUp,
+        Details
     },
     data () {
         return {
@@ -126,6 +135,7 @@ export default {
             tableData: [],
             classification: [], // 字典 - 客户分类
             roleunitUsers: [], // 所属业务员
+            dialogDetails: false, // 详情
             dialogFollowUp: false //跟进记录
         }
     },
@@ -165,6 +175,10 @@ export default {
                 type: type // 购买意向
             };
             this.dialogFollowUp = true;
+        },
+        openDetails(id) { // 详情
+            this.editId = Number(id);
+            this.dialogDetails = true;
         },
         crmDel() { // 删除
             if (this.selectionChecked.length === 0) {

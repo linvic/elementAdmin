@@ -75,7 +75,7 @@ export default {
     },
     data () {
         var existPhone = (rule, value, callback) => {
-            if (value) {
+            if (!this.id && value) {
                 this.$https.get('/api/Customer/get_model_by_telephone?telephone=' + this.form.telephone ).then((result) => {
                     if (result.data.code == 0) {
                         callback(new Error('联系号码已存在'));
@@ -116,6 +116,8 @@ export default {
 
                         }).catch(() => {        
                         });
+                    } else {
+                        callback();
                     }
                 })
             } else {
@@ -287,6 +289,7 @@ export default {
             })
         },
         submit() { // 提交
+            console.log('提交')
             this.$refs.form.validate((valid) => {
                 if (valid) {
 

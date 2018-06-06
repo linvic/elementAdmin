@@ -12,7 +12,8 @@
                 <thead class="has-gutter">
                     <tr>
                         <th class="cell">功能名称</th>
-                        <th width="200px">路径</th>
+                        <th width="120px">功能代码</th>
+                        <th width="250px">路径</th>
                         <th width="200px">操作</th>
                     </tr>
                 </thead>
@@ -28,7 +29,8 @@
                 <div class="custom-tree-node" slot-scope="{ node, data }">
                     <div>{{ data.text }}</div>
                     <div>
-                        <div class="custom-tree-node-item" style="width:200px;">{{ (data.attrValue || '&nbsp;') }}</div>
+                        <div class="custom-tree-node-item" style="width:120px;">{{ (data.value || '&nbsp;') }}</div>
+                        <div class="custom-tree-node-item" style="width:250px;">{{ (data.attrValue || '&nbsp;') }}</div>
                         <div class="custom-tree-node-item" style="width:200px;">
 
                             <el-button

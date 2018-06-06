@@ -49,7 +49,11 @@
                 <el-table-column prop="c_id" label="ID" width="55"></el-table-column>
                 <el-table-column prop="theme" label="主题"></el-table-column>
                 <el-table-column prop="enterprise_name" label="公司名称"></el-table-column>
-                <el-table-column prop="customer_name" label="联系人姓名"></el-table-column>
+                <el-table-column label="客户姓名">
+                    <template slot-scope="scope">
+                        <a href="javascript:;" @click="openDetails(scope.row.c_id)">{{scope.row.customer_name}}</a>
+                    </template>
+                </el-table-column>
                 <el-table-column prop="telephone" label="联系电话"></el-table-column>
                 <el-table-column label="客户分类">
                     <template slot-scope="scope">
@@ -113,6 +117,9 @@
         <el-dialog v-if="dialogChangeSalesman" title="变更业务员" :visible.sync="dialogChangeSalesman" append-to-body width="900px">
             <ChangeSalesman @closeDialog="closeDialog" @parentGetDataList="getDataList" :users="selectionChecked"></ChangeSalesman>
         </el-dialog>
+        <el-dialog v-if="dialogDetails" title="客户详情" :visible.sync="dialogDetails" append-to-body width="1000px">
+            <Details @closeDialog="closeDialog" :id="editId"></Details>
+        </el-dialog>
     </div>
 </template>
 
@@ -121,13 +128,15 @@ import CluesAdd from './CluesAdd'
 import FollowUp from './../FollowUp'
 import CluesToChance from './CluesToChance'
 import ChangeSalesman from './../ChangeSalesman'
+import Details from './../Details'
 
 export default {
     components: {
         CluesAdd,
         FollowUp,
         CluesToChance,
-        ChangeSalesman
+        ChangeSalesman,
+        Details
     },
     data () {
         return {
@@ -158,6 +167,7 @@ export default {
             roleunitUsers: [], // 所属业务员
             dialogCluesAdd: false, //新增
             dialogCluesEdit: false, //编辑
+            dialogDetails: false, // 详情
             dialogFollowUp: false, //跟进记录
             dialogChangeSalesman: false, // 变更业务员
             dialogCluesToChance: false // 转销售机会
@@ -196,6 +206,10 @@ export default {
         cluesEdit(id) { // 修改
             this.editId = Number(id);
             this.dialogCluesEdit = true;
+        },
+        openDetails(id) { // 详情
+            this.editId = Number(id);
+            this.dialogDetails = true;
         },
         FollowUp(id, name, type) { // 更进记录
             this.FollowUpObj = {

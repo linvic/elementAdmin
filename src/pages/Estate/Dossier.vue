@@ -24,14 +24,14 @@
                                 <el-button
                                     size="mini"
                                     type="primary"
-                                    @click="toBuilding(scope.row)">查看楼宇</el-button>
+                                    @click="toBuilding(scope.row)" plain>查看楼宇</el-button>
                                 <el-button
                                     size="mini"
-                                    @click="projectEdit(scope.row.project_id)">编辑</el-button>
+                                    @click="projectEdit(scope.row.project_id)" plain>编辑</el-button>
                                 <el-button
                                     size="mini"
                                     type="danger"
-                                    @click="dicDelete(scope.$index, scope.row)">删除</el-button>
+                                    @click="projectDel(scope.row.project_id)" plain>删除</el-button>
                             </template>
                         </el-table-column>
                     </el-table>
@@ -64,14 +64,14 @@
                                 <el-button
                                     size="mini"
                                     type="primary"
-                                    @click="toFloor(scope.row)">查看楼层</el-button>
+                                    @click="toFloor(scope.row)" plain>查看楼层</el-button>
                                 <el-button
                                     size="mini"
-                                    @click="buildingEdit(scope.row.building_id)">编辑</el-button>
+                                    @click="buildingEdit(scope.row.building_id)" plain>编辑</el-button>
                                 <el-button
                                     size="mini"
                                     type="danger"
-                                    @click="dicDelete(scope.$index, scope.row)">删除</el-button>
+                                    @click="buildingDel(scope.row.project_id, scope.row.building_id)" plain>删除</el-button>
                             </template>
                         </el-table-column>
                     </el-table>
@@ -86,6 +86,10 @@
                             </el-breadcrumb>
                         </el-col>
                         <el-col :span="12">
+                            <el-button-group style="float: right;margin-left: 10px;">
+                                <a class="el-button el-button--success el-button--small" :href="this.$https.defaults.baseURL + '/api/pms_base_rooms/ExportTemplate?building_id=' + this.building_id" target="_blank"><i class="el-icon-web-download"></i> 导出模板</a>
+                                <el-button type="primary" icon="el-icon-web-upload" size="small" @click="ImportRooms()">导入房间</el-button>
+                            </el-button-group>
                             <el-button-group style="float: right;">
                                 <el-button icon="el-icon-refresh" size="small" plain onclick="window.location.reload()">刷新</el-button>
                                 <el-button type="primary" icon="el-icon-circle-plus-outline" size="small" @click="dialogFloorAdd = true">新增楼层</el-button>
@@ -105,14 +109,14 @@
                                 <el-button
                                     size="mini"
                                     type="primary"
-                                    @click="toRoom(scope.row)">查看房间</el-button>
+                                    @click="toRoom(scope.row)" plain>查看房间</el-button>
                                 <el-button
                                     size="mini"
-                                    @click="floorEdit(scope.row.floor_id)">编辑</el-button>
+                                    @click="floorEdit(scope.row.floor_id)" plain>编辑</el-button>
                                 <el-button
                                     size="mini"
                                     type="danger"
-                                    @click="dicDelete(scope.$index, scope.row)">删除</el-button>
+                                    @click="floorDel(scope.row.building_id, scope.row.floor_id)" plain>删除</el-button>
                             </template>
                         </el-table-column>
                     </el-table>
@@ -135,9 +139,9 @@
                         </el-col>
                     </el-row>
                     <el-table :data="RoomTable" style="width: 100%">
-                        <el-table-column prop="room_id" label="ID"></el-table-column>
-                        <el-table-column prop="room_code" label="房间编号"></el-table-column>
-                        <el-table-column prop="room_name" label="房间名称"></el-table-column>
+                        <el-table-column prop="room_id" label="ID" fixed></el-table-column>
+                        <el-table-column prop="room_code" label="房间编号" fixed></el-table-column>
+                        <el-table-column prop="room_name" label="房间名称" fixed></el-table-column>
                         <el-table-column label="房间功能">
                             <template slot-scope="scope">
                                 <span>{{ getDicVal(scope.row.room_feature,'room_feature') }}</span>
@@ -168,19 +172,15 @@
                         <el-table-column prop="is_sold" label="销售状态"></el-table-column>
                         <el-table-column prop="is_rented" label="使用状态"></el-table-column>
                         <el-table-column prop="guide_price" label="指导单价(元/平米)"></el-table-column>
-                        <el-table-column label="操作" width="240">
+                        <el-table-column label="操作" width="150" fixed="right">
                             <template slot-scope="scope">
                                 <el-button
                                     size="mini"
-                                    type="primary"
-                                    @click="dicEdit(scope.$index, scope.row)">绑定电表</el-button>
-                                <el-button
-                                    size="mini"
-                                    @click="roomEdit(scope.row.room_id)">编辑</el-button>
+                                    @click="roomEdit(scope.row.room_id)" plain>编辑</el-button>
                                 <el-button
                                     size="mini"
                                     type="danger"
-                                    @click="dicDelete(scope.$index, scope.row)">删除</el-button>
+                                    @click="roomDel(scope.row.floor_id, scope.row.room_id)" plain>删除</el-button>
                             </template>
                         </el-table-column>
                     </el-table>
@@ -229,6 +229,10 @@
             <Room @closeDialog="closeDialog" @parentGetDataList="getDataList" :project_id="project_id" :building_id="building_id" :floor_id="floor_id" :all_name="(project_name + '#' + building_name + '#' + floor_name + '#')" :id="editId"></Room>
         </el-dialog>
 
+        <el-dialog v-if="dialogImportRooms" title="导入房间" :visible.sync="dialogImportRooms" append-to-body width="400px">
+            <ImportRooms @closeDialog="closeDialog" @parentGetDataList="getDataList"></ImportRooms>
+        </el-dialog>
+
     </div>
 </template>
 
@@ -237,12 +241,15 @@ import Project from './Project'
 import Building from './Building'
 import Floor from './Floor'
 import Room from './Room'
+import ImportRooms from './ImportRooms'
+
 export default {
     components: {
         Project,
         Building,
         Floor,
-        Room
+        Room,
+        ImportRooms
     },
     data () {
         return {
@@ -275,6 +282,7 @@ export default {
             dialogFloorEdit: false, // 编辑楼层弹层
             dialogRoomAdd: false, // 新增房间弹层
             dialogRoomEdit: false, // 编辑房间弹层
+            dialogImportRooms: false // 导入
         }
     },
     created() {
@@ -446,6 +454,133 @@ export default {
             this.editId = Number(id);
             this.dialogRoomEdit = true;
         },
+        projectDel(id) { // 删除项目
+            this.$confirm('您确定要将删除该项目吗?', '提示', {
+                confirmButtonText: '确定',
+                cancelButtonText: '取消',
+                type: 'warning'
+            }).then(() => {
+                this.$https.post('/api/pms_base_projects/BatchDelete', {
+                    project_id: [id]
+                }).then((result) => {
+                    if (result.data.code == 0) {
+                        this.$message({
+                            type: 'success',
+                            showClose: true,
+                            message: '删除成功',
+                            duration: 1500,
+                            onClose: () => {
+                                this.getDataList();
+                            }
+                        })
+                    } else {
+                        this.$message({
+                            type: 'error',
+                            showClose: true,
+                            message: result.data.message
+                        })
+                    }
+                })
+
+            }).catch(() => {
+            });
+        },
+        buildingDel(projectId, id) { // 删除楼宇
+            this.$confirm('您确定要将删除该楼宇吗?', '提示', {
+                confirmButtonText: '确定',
+                cancelButtonText: '取消',
+                type: 'warning'
+            }).then(() => {
+                this.$https.post('/api/pms_base_buildings/BatchDelete', {
+                    project_id: projectId,
+                    building_id: [id]
+                }).then((result) => {
+                    if (result.data.code == 0) {
+                        this.$message({
+                            type: 'success',
+                            showClose: true,
+                            message: '删除成功',
+                            duration: 1500,
+                            onClose: () => {
+                                this.getDataList();
+                            }
+                        })
+                    } else {
+                        this.$message({
+                            type: 'error',
+                            showClose: true,
+                            message: result.data.message
+                        })
+                    }
+                })
+
+            }).catch(() => {
+            });
+        },
+        floorDel(buildingId, id) { // 删除项楼层
+            this.$confirm('您确定要将删除该楼层吗?', '提示', {
+                confirmButtonText: '确定',
+                cancelButtonText: '取消',
+                type: 'warning'
+            }).then(() => {
+                this.$https.post('/api/pms_base_floors/BatchDelete', {
+                    building_id: buildingId,
+                    floor_id: [id]
+                }).then((result) => {
+                    if (result.data.code == 0) {
+                        this.$message({
+                            type: 'success',
+                            showClose: true,
+                            message: '删除成功',
+                            duration: 1500,
+                            onClose: () => {
+                                this.getDataList();
+                            }
+                        })
+                    } else {
+                        this.$message({
+                            type: 'error',
+                            showClose: true,
+                            message: result.data.message
+                        })
+                    }
+                })
+
+            }).catch(() => {
+            });
+        },
+        roomDel(floorId, id) { // 删除房间
+            this.$confirm('您确定要将删除该房间吗?', '提示', {
+                confirmButtonText: '确定',
+                cancelButtonText: '取消',
+                type: 'warning'
+            }).then(() => {
+                this.$https.post('/api/pms_base_rooms/BatchDelete', {
+                    floor_id: floorId,
+                    room_id: [id]
+                }).then((result) => {
+                    if (result.data.code == 0) {
+                        this.$message({
+                            type: 'success',
+                            showClose: true,
+                            message: '删除成功',
+                            duration: 1500,
+                            onClose: () => {
+                                this.getDataList();
+                            }
+                        })
+                    } else {
+                        this.$message({
+                            type: 'error',
+                            showClose: true,
+                            message: result.data.message
+                        })
+                    }
+                })
+
+            }).catch(() => {
+            });
+        },
         positionBack(step) {
             this.tabPosition = '' + step;
             this.pageIndex = 1; // 设置页码 = 1
@@ -467,6 +602,9 @@ export default {
                 this.floor_id = 0;
                 this.floor_name = '';
             }
+        },
+        ImportRooms() { // 导入
+            this.dialogImportRooms = true;
         }
     },
     computed: {

@@ -1,6 +1,7 @@
 import Vue from 'vue'
 import Router from 'vue-router'
 import axios from 'axios'
+import { Loading } from 'element-ui'
 
 Vue.use(Router)
 const router = new Router({
@@ -288,7 +289,7 @@ axios.defaults.withCredentials = true; //让携带cookie
 // .catch((error) => {
 //     console.error('请求失败',error)
 // })
-
+let loadingAxios;
 // 添加请求拦截器
 axios.interceptors.request.use(
     (config) => {
@@ -297,21 +298,25 @@ axios.interceptors.request.use(
         if (localStorage.getItem('Token')) {  // 判断是否存在token，如存在，则每个http header都加上token
             config.headers.Authorization = 'Bearer ' + localStorage.getItem('Token');
         }
+        loadingAxios = Loading.service({ fullscreen: true, text: '努力加载中', spinner: 'el-icon-loading', background: 'raba(0, 0, 0, 0.3)' }); // 创建loading
+        
         return config;
     },
     (error) => {
         // 对请求错误做些什么
         return Promise.reject(error);
     }
-    )
+)
 
 // 添加响应拦截器
 axios.interceptors.response.use(
     (response) => {
+        loadingAxios.close(); // 关闭loading
         // 对响应数据做些什么
         return response;
     },
     (error) => {
+        loadingAxios.close(); // 关闭loading
         // 对响应错误做些什么
         if(error.response) {
             if(error.response.status === 401) {
@@ -323,7 +328,7 @@ axios.interceptors.response.use(
         }
         return Promise.reject(error.response.data);
     }
-    )
+)
 
 
 // router.push('/service')

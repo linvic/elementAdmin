@@ -34,6 +34,9 @@
             <el-form-item label="是否显示：">
                 <el-switch v-model="form.is_show" active-value="1" inactive-value="0"></el-switch>
             </el-form-item>
+            <el-form-item label="是否认证：">
+                <el-switch v-model="form.authen_type" active-value="1" inactive-value="0"></el-switch>
+            </el-form-item>
             <el-form-item label="是否启用：">
                 <el-switch v-model="form.status" active-value="1" inactive-value="0"></el-switch>
             </el-form-item>
@@ -61,7 +64,7 @@ export default {
                 img_path: 'el-icon', // 模块图标路径
                 location: '/', // 跳转链接
                 status: '1', // 模块状态，0、停用，1、启用
-                authen_type: 0, // 认证类型(0不控制1授权功能)
+                authen_type: '1', // 认证类型(0不控制1授权功能)
                 is_show: '1', // 是否显示，1、显示，0、不显示
             },
             form_rules: {
@@ -147,6 +150,7 @@ export default {
                     this.form.location = _data.location;
                     this.form.status = _data.status.toString();
                     this.form.is_show = (_data.is_show ? '1' : '0');
+                    this.form.authen_type = _data.authen_type.toString();
 
                 } else {
                     this.$message({
@@ -164,6 +168,8 @@ export default {
                     let _postData = JSON.parse(JSON.stringify(this.form));
                     _postData.parent_id = ((!this.form.parent_id || this.form.parent_id == '') ? 0 : this.form.parent_id);
                     _postData.is_show = Number(_postData.is_show);
+                    _postData.authen_type = Number(_postData.authen_type);
+                    
                     _postData.status = Number(_postData.status);
                     
                     if (this.id) { // 编辑

@@ -16,7 +16,11 @@
                 <el-table-column prop="id" label="ID" width="55"></el-table-column>
                 <el-table-column prop="created_user_name" label="申请人"></el-table-column>
                 <el-table-column prop="created_time" label="申请时间"></el-table-column>
-                <el-table-column prop="old_user_name" label="变更客户"></el-table-column>
+                <el-table-column label="变更客户">
+                    <template slot-scope="scope">
+                        <a href="javascript:;" @click="openDetails(scope.row.c_id)">{{scope.row.old_user_name}}</a>
+                    </template>
+                </el-table-column>
                 <el-table-column prop="apply_remark" label="变更原因"></el-table-column>
                 <el-table-column label="状态">
                     <template slot-scope="scope">
@@ -53,19 +57,27 @@
                 </el-pagination>
             </div>
         </el-card>
+        <el-dialog v-if="dialogDetails" title="客户详情" :visible.sync="dialogDetails" append-to-body width="1000px">
+            <Details @closeDialog="closeDialog" :id="editId"></Details>
+        </el-dialog>
     </div>
 </template>
 
 <script>
-
+import Details from '@/pages/CRM/Details'
 export default {
+    components: {
+        Details
+    },
     data () {
         return {
+            editId: null, // 编辑id
             pageIndex: 1, // 当前页码
             pageSize: 10, // 页码大小
             dataTotal: 0, // 数据总数
             loading: true,
             approve_status: '2',
+            dialogDetails: false, // 详情
             tableData: []
         }
     },
@@ -85,6 +97,10 @@ export default {
         },
         closeDialog(name) { // 关闭弹层
             this[name] = false;
+        },
+        openDetails(id) { // 详情
+            this.editId = Number(id);
+            this.dialogDetails = true;
         },
         handleClick(tab) {
             this.approve_status = tab.name;

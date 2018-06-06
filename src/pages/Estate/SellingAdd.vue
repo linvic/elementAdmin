@@ -1,31 +1,27 @@
 <template>
     <div>
-        <el-form ref="stepOne_form" :model="stepOne_form" status-icon :rules="stepOne_rules" label-width="120px" v-show="step === 0 || isEdit">
-            <el-form-item label="放盘名称/批次：" prop="name">
-                <el-input v-model="stepOne_form.name"></el-input>
+        <el-form ref="stepOne_form" :model="stepOne_form" size="small" status-icon :rules="stepOne_rules" label-width="130px" v-show="step === 0 || isEdit">
+            <el-form-item label="放盘名称/批次：" prop="open_name">
+                <el-input v-model="stepOne_form.open_name"></el-input>
             </el-form-item>
-            <el-form-item label="项目名称：" prop="project">
-                <el-select v-model="stepOne_form.project">
-                    <el-option label="天安数码城T5" value="1"></el-option>
+            <el-form-item label="项目名称：" prop="project_id">
+                <el-select v-model="stepOne_form.project_id" @change="getBuildings" :disabled="isEdit">
+                    <el-option v-for="item in projects" :key="item.project_id" :label="item.project_name" :value="item.project_id"></el-option>
                 </el-select>
             </el-form-item>
-            <el-form-item label="楼宇名称：" prop="floor">
-                <el-select v-model="stepOne_form.floor">
-                    <el-option label="S1号楼" value="2"></el-option>
-                    <el-option label="S2号楼" value="3"></el-option>
+            <el-form-item label="楼宇名称：" prop="building_id">
+                <el-select v-model="stepOne_form.building_id" @change="changeBuilding" :disabled="isEdit">
+                    <el-option v-for="item in building" :key="item.building_id" :label="item.building_name" :value="item.building_id"></el-option>
                 </el-select>
             </el-form-item>
-            <el-form-item label="适用销售流程：" prop="type">
-                <el-select v-model="stepOne_form.type">
-                    <el-option label="业务类型A" value="业务类型A"></el-option>
-                    <el-option label="业务类型B" value="业务类型B"></el-option>
-                    <el-option label="业务类型C" value="业务类型C"></el-option>
-                    <el-option label="业务类型D" value="业务类型D"></el-option>
-                    <el-option label="业务类型E" value="业务类型E"></el-option>
+            <el-form-item label="适用销售流程：" prop="process_type">
+                <el-select v-model="stepOne_form.process_type">
+                    <el-option label="产业楼销售流程" value="0"></el-option>
+                    <el-option label="住宅楼销售流程" value="1"></el-option>
                 </el-select>
             </el-form-item>
             <el-form-item>
-                <el-button @click="stepOne_next()">下一步</el-button>
+                <el-button @click="stepOne_next()" v-if="!isEdit">下一步</el-button>
             </el-form-item>
         </el-form>
         <div v-show="step === 1 || isEdit">
@@ -41,9 +37,9 @@
                         <thead>
                             <tr>
                                 <th>
-                                    <el-checkbox :indeterminate="isIndeterminate" v-model="checkAll" @change="handleCheckAllChange">全选</el-checkbox>
+                                    <el-checkbox v-show="checkAllIsShow" :indeterminate="isIndeterminate" v-model="checkAll" @change="handleCheckAllChange">全选</el-checkbox>
                                 </th>
-                                <th colspan="999">S1号楼</th>
+                                <th colspan="999">{{build_name}}</th>
                             </tr>
                         </thead>
 
@@ -53,16 +49,16 @@
                                     <el-checkbox v-model="checkedTr" :label="lists.floor_id" :key="lists.floor_id" name="floor" @change="handleCheckedTrChange">{{lists.floor_name}}</el-checkbox>
                                 </td>
 
-                                <!-- status/* 状态 0-未放盘 1-可售 2-预留 disabled-已放盘 */  -->
-                                <!-- 渲染数据时，将状态1-可售 2-预留 均标记为 disabled  -->
+                                <!-- status/* 状态 0-未放盘 1-可售 2-预留 3.disabled-已放盘 */  -->
+                                <!-- 渲染数据时，将状态1-可售 2-预留 均标记为 3.disabled  -->
                                 <td
                                 v-for="list in lists.rooms"
-                                :class="{'active': list.active === true ,'room': list.status === 0,'disabled': list.status !== 0}"
+                                :class="{'active': list.active === true, 'room': list.open_status !== 3, 'status0': list.open_status === 0, 'status1': list.open_status === 1, 'status2': list.open_status === 2, 'disabled': list.open_status === 3}"
                                 @click="checkedRoom(list)"
                                 >
 
-                                    <p>{{list.name}}</p>
-                                    <em>￥{{list.price}}</em>
+                                    <p>{{list.room_name}}</p>
+                                    <em>￥{{list.guide_price}}</em>
                                 </td>
                                 <!-- 房间数量不够 空 td 来凑 -->
                                 <td v-for="list in (roomMaxLength - lists.rooms.length)"></td>
@@ -73,7 +69,12 @@
                 </div>
             </div>
             <div class="m-t">
-                <el-button type="primary" @click="stepTwo_save()">完成</el-button>
+                <el-button size="mini" type="primary" plain :disabled="disabled.is_sale" @click="isSale()">标记为可售</el-button>
+                <el-button size="mini" type="success" plain :disabled="disabled.is_reserve"  @click="isReserve()">标记为预留</el-button>
+                <el-button size="mini" type="warning" plain :disabled="disabled.is_cancel"  @click="isCancel()">取消放盘</el-button>
+            </div>
+            <div class="m-t">
+                <el-button type="primary" @click="stepTwo_save()">保存并发布放盘</el-button>
             </div>
         </div>
     </div>
@@ -81,13 +82,10 @@
 
 <script>
 export default {
-    components: {
-    },
     data () {
         var checkAmount = (rule, value, callback) => {
             setTimeout(() => {
                 var isInteger = /^[1-9]\d*$/;
-                console.log(isInteger.test(value))
                 if (!isInteger.test(value)) {
                     callback(new Error('请输入正整数'));
                 } else {
@@ -96,218 +94,187 @@ export default {
             },1000);
         };
         return {
-            step: 1, // 步骤
+            step: 0, // 步骤
             isEdit: false, // 是否编辑模式
             stepOne_form: {
-                name: '',
-                project: '',
-                floor: '',
-                type: ''
+                open_name: '',
+                project_id: '',
+                project_name: '',
+                building_id: '',
+                building_name: '',
+                process_type: ''
             },
             stepOne_rules: {
-                name: [
-                    { required: true, message: '请填写', trigger: 'blur' }
+                open_name: [
+                    { required: true, message: '请填写放盘名称/批次', trigger: 'blur' }
                 ],
-                type: [
-                    { required: true, message: '请填写', trigger: 'blur' }
+                project_id: [
+                    { required: true, message: '请选择放盘项目', trigger: 'change' }
+                ],
+                building_id: [
+                    { required: true, message: '请选择放盘楼宇', trigger: 'change' }
+                ],
+                process_type: [
+                    { required: true, message: '请选择适用销售流程', trigger: 'change' }
                 ]
             },
             checkAll: false, // 全选
+            checkAllIsShow: true,
             checkedTr: [], // 已选中的楼层id
-            checkedTrAll: [1 ,2, 3],
+            checkedTrAll: [],
             isIndeterminate: false,
-
-            roomMaxLength: 22,
+            build_name: '',
+            roomMaxLength: 0,
             roomSelected: [], // 选中的房间ID
-            roomList: [
-                {
-                    floor_id: 1, // 层 id
-                    floor_name: '第1层', // 层 name
-                    rooms: [
-                        {
-                            id: 101,
-                            name: '101', // 房间号
-                            price: '100.00', // 指导单价
-                            status: 0 // status/* 状态 0-未放盘 1-可售 2-预留 disabled-已放盘 
-                        },
-                        {
-                            id: 102,
-                            name: '102',
-                            price: '10.00',
-                            status: 1
-                        }
-                    ]
-                },
-                {
-                    floor_id: 2, // 层 id
-                    floor_name: '第2层', // 层 name
-                    rooms: [
-                        {
-                            id: 201,
-                            name: '201',
-                            price: '100.00',
-                            status: 0
-                        },
-                        {
-                            id: 202,
-                            name: '202',
-                            price: '10.00',
-                            status: 1
-                        }
-                    ]
-                },
-                {
-                    floor_id: 3, // 层 id
-                    floor_name: '第3层', // 层 name
-                    rooms: [
-                        {
-                            id: 1,
-                            name: '301',
-                            price: '100.00',
-                            status: 0
-                        },
-                        {
-                            id: 2,
-                            name: '302',
-                            price: '10.00',
-                            status: 1
-                        },
-                        {
-                            id: 3,
-                            name: '303',
-                            price: '10.00',
-                            status: 1
-                        },
-                        {
-                            id: 4,
-                            name: '304',
-                            price: '10.00',
-                            status: 1
-                        },
-                        {
-                            id: 5,
-                            name: '305',
-                            price: '10.00',
-                            status: 1
-                        },
-                        {
-                            id: 6,
-                            name: '306',
-                            price: '10.00',
-                            status: 1
-                        },
-                        {
-                            id: 7,
-                            name: '307',
-                            price: '10.00',
-                            status: 1
-                        },
-                        {
-                            id: 8,
-                            name: '308',
-                            price: '10.00',
-                            status: 0
-                        },
-                        {
-                            id: 9,
-                            name: '309',
-                            price: '10.00',
-                            status: 0
-                        },
-                        {
-                            id: 10,
-                            name: '3010',
-                            price: '10.00',
-                            status: 1
-                        },
-                        {
-                            id: 11,
-                            name: '3011',
-                            price: '10.00',
-                            status: 2
-                        },
-                        {
-                            id: 12,
-                            name: '3012',
-                            price: '10.00',
-                            status: 2
-                        },
-                        {
-                            id: 13,
-                            name: '3013',
-                            price: '10.00',
-                            status: 2
-                        },
-                        {
-                            id: 14,
-                            name: '3014',
-                            price: '10.00',
-                            status: 2
-                        },
-                        {
-                            id: 15,
-                            name: '3015',
-                            price: '10.00',
-                            status: 2
-                        },
-                        {
-                            id: 16,
-                            name: '3016',
-                            price: '10.00',
-                            status: 0
-                        },
-                        {
-                            id: 17,
-                            name: '3017',
-                            price: '10.00',
-                            status: 1
-                        },
-                        {
-                            id: 18,
-                            name: '3018',
-                            price: '10.00',
-                            status: 2
-                        },
-                        {
-                            id: 19,
-                            name: '3019',
-                            price: '10.00',
-                            status: 2
-                        },
-                        {
-                            id: 20,
-                            name: '3020',
-                            price: '10.00',
-                            status: 2
-                        },
-                        {
-                            id: 21,
-                            name: '3021',
-                            price: '10.00',
-                            status: 2
-                        },
-                        {
-                            id: 22,
-                            name: '3022',
-                            price: '10.00',
-                            status: 2
-                        }
-                    ]
-                }
-            ]
+            roomList: [],
+            disabled: {
+                is_sale: true, // 可售按钮
+                is_reserve: true, // 预留按钮
+                is_cancel: true // 取消放盘
+            },
+            projects: [], // 项目
+            building: [] // 楼宇列表
         }
     },
+    props: {
+        editObj: {
+            type: Object
+        }
+        // 这里明天要传 open_id(id)，open_name, project_id，building_id，process_type
+    },
     created() {
-        this.getList();
+        let _this = this;
+        this.$https.all([
+            this.getProjects()
+        ]).then(this.$https.spread(function (acct, perms) {
+            if (_this.editObj) { // 编辑
+                _this.setOldData();
+            }
+        }))
     },
     watch: {
+        checkedTr: function(newVal, oldVal) { // 监听选中层
+            // if(newVal.length===0){this.checkAll = false;}
+            let c = this.ArrExcept(newVal, oldVal);
+            if (newVal.length > oldVal.length) { // 判断数据 新增
+                // 选中层 增加，给增加的 层给选中状态 active
+                this.checkedTrActive(c, true);
+            } else if (newVal.length < oldVal.length){
+                // 选中层减少 ， 给减少 的层 取消选中状态 active
+                this.checkedTrActive(c, false);
+            }
+        },
+        roomList: {
+            handler: function(newVal, oldVal) {
+                for (let floor of this.roomList) { // 遍历楼宇
+                    let optionalN = 0; // status !== 3 统计可选择的块数量
+                    let activeN = 0; // 统计已选中的个数
+                    for (let room of floor.rooms) {
+
+                        if (room.open_status !== 3) {
+                            optionalN ++
+
+                            let selegth = this.roomSelected.length + 1;
+                            // 1.判断 val 是否存在选中的数组中
+                            let index_of = this.roomSelected.indexOf(room, -selegth);
+
+                            if (room.active) {
+                                activeN ++
+
+                                if (index_of === -1 ) { 
+                                    // 已选中的 不存在选中数组中
+                                    this.roomSelected.push(room);
+                                }
+
+                            } else {
+                                // 未选择的存在数组中，则删
+                                if (index_of !== -1 ) { 
+                                    // 已选中的 不存在选中数组中
+                                    this.roomSelected.splice(index_of, 1);
+                                }
+                            }
+                        }
+                        
+                    }
+                    let arrayL = this.checkedTr.length + 1;
+                    let arrayIndex = this.checkedTr.indexOf(floor.floor_id, -arrayL );
+                    if (optionalN > 0 && optionalN === activeN) {
+                        // console.log('当前行全选中')
+                        if (arrayIndex === -1 ) {
+                            this.checkedTr.push(floor.floor_id)
+                        }
+                    } else {
+                        // console.log('当前行未全选')
+                        if (arrayIndex !== -1 ) {
+                            this.checkedTr.splice(arrayIndex, 1)
+                        }
+                    }
+                }
+            },
+            deep: true
+        },
+        roomSelected: function(newVal, oldVal) { // 监听选中层
+            if (newVal.length === 0) { // 当前无选中的房间
+                this.disabled.is_sale = true;
+                this.disabled.is_reserve = true;
+                this.disabled.is_cancel = true;
+            } else {
+                this.disabled.is_sale = false;
+                this.disabled.is_reserve = false;
+                this.disabled.is_cancel = false;
+                for (let room of newVal) { // 遍历房间
+                    if (room.open_status === 0) { // 如果有房间的状态为 0 未放盘，那就不能取消放盘
+                        this.disabled.is_cancel = true;
+                    } else if (room.open_status === 1) { // 如果有房间的状态为1可售，那就不能标记为可售
+                        this.disabled.is_sale = true;
+                    } else if (room.open_status === 2) { // 如果有房间的状态为2 预留，那就不能标记为预留
+                        this.disabled.is_reserve = true;
+                    }
+                }
+            }
+        },
+        checkedTrAll: function(newVal, oldVal) { // 监听选中层
+            console.log('all数据变了', newVal, oldVal)
+        }
     },
     methods: {
+        setOldData() {
+            this.stepOne_form.open_name = this.editObj.open_name; // 
+            this.stepOne_form.project_id = this.editObj.project_id; // 
+            this.stepOne_form.process_type = this.editObj.process_type.toString(); // 
+
+            
+            let _this = this;
+            this.$https.all([
+                this.getBuildings(this.editObj.project_id)
+            ]).then(this.$https.spread(function (acct, perms) {
+                _this.stepOne_form.building_id = _this.editObj.building_id;
+                _this.changeBuilding(_this.stepOne_form.building_id);
+                _this.isEdit = true;
+                _this.step = 1;
+                _this.getList()
+            }))
+        },
         stepOne_next() { // 下一步
             this.$refs['stepOne_form'].validate((valid) => {
                 if (valid) {
-                    this.step = 1;
-                    
+                    // 查询楼盘状态
+                    this.$https.get('/api/pms_sale_open/QueryOpenStatus', {
+                        params: {
+                            building_id: this.stepOne_form.building_id,
+                        }
+                    }).then((result) => {
+                        if (result.data.code == 0) {
+                            this.step = 1;
+                            this.getList();
+                        } else {
+                            this.$message({
+                                type: 'error',
+                                showClose: true,
+                                message: result.data.message
+                            })
+                        }
+                    })
                 } else {
                     console.error('验证不通过');
                     return false;
@@ -317,46 +284,219 @@ export default {
         handleCheckAllChange(val) { // 全选
             this.checkedTr = val ? this.checkedTrAll : [];
             this.isIndeterminate = false;
-            console.log(val);
-            console.log(this.checkedTr);
         },
-        handleCheckedTrChange(value) {
-            console.log(this.checkedTr);
+        handleCheckedTrChange(value) { // 单选
             let checkedCount = this.checkedTr.length;
             this.checkAll = checkedCount === this.roomList.length;
             this.isIndeterminate = checkedCount > 0 && checkedCount < this.roomList.length;
         },
         // 获取数据
-        getList(){
-            this.roomList.map(item => {
-                item.rooms.map(items => {
-                    this.$set(items, 'active', false);
-                })
+        getList() {
+            console.log('lou',this.stepOne_form.building_id)
+            this.$https.get('/api/pms_sale_open/GetOpenDetails', {
+                params: {
+                    building_id: this.stepOne_form.building_id,
+                }
+            }).then((result) => {
+                if (result.data.code == 0) {
+                    this.roomList = result.data.data.floors;
+                    this.roomMaxLength = result.data.data.floor_max_room;
+                    this.build_name = result.data.data.building_name;
+                    this.checkedTrAll = [];
+                    this.roomList.map(item => {
+                        this.checkedTrAll.push(item.floor_id);
+                        item.rooms.map(items => {
+                            this.$set(items, 'active', false);
+                            if (this.isEdit) { // 编辑模式
+
+                            } else { // 新增模式
+                                if (items.open_status !== 0) {
+                                    items.open_status = 3;
+                                }
+                            }
+                            
+                        })
+                    })
+                } else {
+                    this.$message({
+                        type: 'error',
+                        showClose: true,
+                        message: result.data.message
+                    })
+                }
             })
-            
         },
         // 选中需要操作的td
         checkedRoom(item) {
-            
-            let selegth = this.roomSelected.length + 1;
-            if (item.status === 0) { // 状态为O才可以选择
-
-                // 1.判断 val 是否存在选中的数组中
-                let index_of = this.roomSelected.indexOf(item, -selegth);
-
-                if (index_of === -1 ) { 
-                    // 3. 否则 添加到数组
-                    // 未选中
-                    this.roomSelected.push(item);
-                } else {
-                    // 2. 如果存在数组中，即已选中，则取消选中
-                    this.roomSelected.splice(index_of, 1);
-                }
+            if (item.open_status !== 3) { // 状态不为3 就可以选择
                 // 控制 active
                 item.active = !item.active;
-
             }
-            console.info('已选中', this.roomSelected);
+        },
+        checkedTrActive(arr, isChecked) {
+            // arr 层
+            for (let i of arr) {
+                for (let floor of this.roomList) { // 遍历楼宇
+                    if (i == floor.floor_id) { // 匹配到变化的层
+                        for (let room of floor.rooms) {
+
+                            if (isChecked) {
+                                room.open_status !== 3 ? room.active = true : '';
+                            } else {
+                                room.open_status !== 3 ? room.active = false : '';
+                            }
+                            
+                        }
+                    }
+                }
+            }
+        },
+        ArrExcept(arrOne, arrTwo) { // 取数组差集
+            let c = [];
+            let tmp = arrOne.concat(arrTwo);
+            let o = {};
+            for (let i = 0; i < tmp.length; i ++) {
+                (tmp[i] in o) ? o[tmp[i]] ++ : o[tmp[i]] = 1;
+            }
+            for (let x in o)
+                if (o[x] == 1) c.push(x);
+            return c;
+        },
+        isSale() {
+            this.checkAllIsShow = false;
+            for (let item of this.roomSelected) {
+                item.open_status = 1;
+                item.active = false;
+            }
+        },
+        isReserve() {
+            this.checkAllIsShow = false;
+            for (let item of this.roomSelected) {
+                item.open_status = 2;
+                item.active = false;
+            }
+        },
+        isCancel() {
+            this.checkAllIsShow = false;
+            for (let item of this.roomSelected) {
+                item.open_status = 0;
+                item.active = false;
+            }
+        },
+        stepTwo_save() {
+            this.$refs['stepOne_form'].validate((valid) => {
+                if (valid) {
+                    
+                    let _rooms = {};
+                    let _this = this;
+                    this.roomList.map(item => {
+                        this.checkedTrAll.push(item.floor_id);
+                        item.rooms.map(items => {
+                            if (_this.isEdit) { // 编辑
+                                let _key = '' + items.room_id;
+                                _rooms[_key] = items.open_status;
+                            } else { //新增
+                                if (items.open_status === 1 || items.open_status === 2) {
+                                    let _key = '' + items.room_id;
+                                    _rooms[_key] = items.open_status;
+                                }
+                            }
+                        })
+                    })
+
+                    let _postData = JSON.parse(JSON.stringify(this.stepOne_form));
+                    _postData.rooms = _rooms;
+                    if (this.isEdit) {
+                        _postData.open_id = this.editObj.id;
+                    }
+                    this.$https.post('/api/pms_sale_open/CommitOpenStatus', _postData).then((result) => {
+                        if (result.data.code == 0) {
+                            this.$message({
+                                type: 'success',
+                                showClose: true,
+                                message: (this.isEdit ? '放盘修改成功' : '放盘成功'),
+                                duration: 1000,
+                                onClose: () => {
+                                    // 关闭当前dialog，
+                                    this.closeDialog();
+                                    // 刷新列表
+                                    this.$emit('parentGetDataList');
+                                }
+                            })
+                        } else {
+                            this.$message({
+                                type: 'error',
+                                showClose: true,
+                                message: result.data.message
+                            })
+                        }
+                    })
+                } else {
+                    console.error('验证不通过');
+                    return false;
+                }
+            })
+        },
+        getProjects() { // 获取房产项目
+            return this.$https.get('/api/pms_base_projects/GetProjects', {
+                params: {
+                    page: 1,
+                    page_size: 999,
+                }
+            }).then((result) => {
+                if (result.data.code == 0) {
+                    this.projects = result.data.data.Items;
+                    console.log('获取了projects')
+                } else {
+                    this.$message({
+                        type: 'error',
+                        showClose: true,
+                        message: result.data.message
+                    })
+                }
+            })
+        },
+        getBuildings(val) { // 获取楼宇
+            let obj = this.projects.find((item)=>{
+                return item.project_id === val;
+            });
+            console.log(this.projects)
+            this.stepOne_form.project_name = obj.project_name;
+
+            this.stepOne_form.building_id = ''
+            return this.$https.get('/api/pms_base_buildings/GetBuildings', {
+                params: {
+                    page: 1,
+                    page_size: 999,
+                    project_id: this.stepOne_form.project_id
+                }
+            }).then((result) => {
+                if (result.data.code == 0) {
+                    // 遍历项目
+                    this.building = result.data.data.Items;
+                } else {
+                    this.$message({
+                        type: 'error',
+                        showClose: true,
+                        message: result.data.message
+                    })
+                }
+            })
+        },
+        changeBuilding(val) {
+            let obj = this.building.find((item)=>{
+                return item.building_id === val;
+            });
+            this.stepOne_form.building_name = obj.building_name;
+        },
+        closeDialog(name) { // 关闭当前
+            // this.$refs.form.resetFields(); // 重置表单
+            if (!name) {
+                this.$emit('closeDialog', 'dialogSellingAdd'); // 执行父组件关闭方法
+                this.$emit('closeDialog', 'dialogSellingEdit'); // 执行父组件关闭方法
+            } else {
+                this.$emit('closeDialog', name); // 执行父组件关闭方法
+            }
         }
     },
     computed: {
@@ -429,7 +569,7 @@ export default {
     }
     td.disabled {
         /* 已放盘 */
-        background-color: #ddd;
+        background-color: #bbb;
         color: #fff;
     }
     .room.active {

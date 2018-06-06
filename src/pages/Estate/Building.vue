@@ -190,10 +190,10 @@ export default {
                     this.form.building_alias_name  = _data.building_alias_name; // 楼宇运营名称
                     
                     this.form.floor_amount  = _data.floor_amount; // 楼层数量
-                    this.form.building_function  = _data.building_function; // 楼宇功能
-                    this.form.building_structure  = _data.building_structure; // 结构类别
-                    this.form.building_decoration  = _data.building_decoration; // 装修标准
-                    this.form.building_damage  = _data.building_damage; // 完损等级
+                    this.form.building_function  = _data.building_function == 0 ? '' : _data.building_function; // 楼宇功能
+                    this.form.building_structure  = _data.building_structure == 0 ? '' : _data.building_structure; // 结构类别
+                    this.form.building_decoration  = _data.building_decoration == 0 ? '' : _data.building_decoration; // 装修标准
+                    this.form.building_damage  = _data.building_damage == 0 ? '' : _data.building_damage; // 完损等级
                     this.form.building_area  = _data.building_area == 0 ? '' : _data.building_area; // 建筑面积
                     this.form.public_area  = _data.public_area == 0 ? '' : _data.public_area; // 公摊面积
                     this.form.usable_area  = _data.usable_area == 0 ? '' : _data.usable_area; // 使用面积
@@ -216,9 +216,15 @@ export default {
                 if (valid) {
                     let _postData = JSON.parse(JSON.stringify(this.form));
                     _postData.project_id = this.project_id;
+                    _postData.building_function  = this.form.building_function == '' ? 0 : this.form.building_function; // 楼宇功能
+                    _postData.building_structure  = this.form.building_structure == '' ? 0 : this.form.building_structure; // 结构类别
+                    _postData.building_decoration  = this.form.building_decoration == '' ? 0 : this.form.building_decoration; // 装修标准
+                    _postData.building_damage  = this.form.building_damage == '' ? 0 : this.form.building_damage; // 完损等级
                     _postData.building_area  = this.form.building_area == '' ? 0 : this.form.building_area; // 建筑面积
                     _postData.public_area  = this.form.public_area == '' ? 0 : this.form.public_area; // 公摊面积
                     _postData.usable_area  = this.form.usable_area == '' ? 0 : this.form.usable_area; // 使用面积
+
+                    _postData.floor_amount = parseInt(_postData.floor_amount);
                     if (this.id) { // 编辑
                         _postData.building_id = parseInt(this.id);
                         this.$https.post('/api/pms_base_buildings/ModifyBuilding', _postData).then((result) => {
