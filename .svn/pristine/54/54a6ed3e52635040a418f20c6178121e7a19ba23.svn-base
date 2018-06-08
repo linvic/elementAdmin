@@ -1,0 +1,400 @@
+<template>
+    <div>
+        <el-form ref="form" :rules="form_rules" :model="form" label-width="120px" size="small">
+            <el-row>
+                <el-col :span="12">
+                    <el-form-item label="房间编码" prop="room_code">
+                        <el-input v-model="form.room_code"></el-input>
+                    </el-form-item>
+                </el-col>
+                <el-col :span="12">
+                    <el-form-item label="房间名称" prop="room_name">
+                        <el-input v-model="form.room_name"></el-input>
+                    </el-form-item>
+                </el-col>
+            </el-row>
+            <el-row>
+                <el-col :span="12">
+                    <el-form-item label="楼层数" prop="num_floor">
+                        <el-input v-model="form.num_floor" @keyup.native="onkeyupPlusInt($event)" placeholder="正整数"></el-input>
+                    </el-form-item>
+                </el-col>
+            </el-row>
+            <el-row>
+                <el-col :span="12">
+                    <el-form-item label="房间功能">
+                        <el-select v-model="form.room_feature">
+                            <el-option v-for="item in room_feature" :key="item.value_id" :label="item.value_name" :value="item.value_id"></el-option>
+                        </el-select>
+                    </el-form-item>
+                </el-col>
+                <el-col :span="12">
+                    <el-form-item label="装修">
+                        <el-select v-model="form.room_decoration">
+                            <el-option v-for="item in room_decoration" :key="item.value_id" :label="item.value_name" :value="item.value_id"></el-option>
+                        </el-select>
+                    </el-form-item>
+                </el-col>
+            </el-row>
+            <el-row>
+                <el-col :span="12">
+                    <el-form-item label="户型">
+                        <el-select v-model="form.room_unit">
+                            <el-option v-for="item in room_unit" :key="item.value_id" :label="item.value_name" :value="item.value_id"></el-option>
+                        </el-select>
+                    </el-form-item>
+                </el-col>
+                <el-col :span="12">
+                    <el-form-item label="朝向">
+                        <el-select v-model="form.room_toward">
+                            <el-option v-for="item in room_toward" :key="item.value_id" :label="item.value_name" :value="item.value_id"></el-option>
+                        </el-select>
+                    </el-form-item>
+                </el-col>
+            </el-row>
+            <el-row>
+                <el-col :span="12">
+                    <el-form-item label="建筑面积">
+                        <el-input v-model="form.built_area" @keyup.native="onkeyupPrice($event)" placeholder="数字，小数点两位，单位平方米">
+                            <template slot="append">平方米</template>
+                        </el-input>
+                    </el-form-item>
+                </el-col>
+                <el-col :span="12">
+                    <el-form-item label="使用面积">
+                        <el-input v-model="form.usable_area" @keyup.native="onkeyupPrice($event)" placeholder="数字，小数点两位，单位平方米">
+                            <template slot="append">平方米</template>
+                        </el-input>
+                    </el-form-item>
+                </el-col>
+            </el-row>
+            <el-row>
+                <el-col :span="12">
+                    <el-form-item label="指导单价" prop="guide_price">
+                        <el-input v-model="form.guide_price" @keyup.native="onkeyupPrice($event)" placeholder="数字，小数点两位，单位平方米">
+                            <template slot="append">元/平米</template>
+                        </el-input>
+                    </el-form-item>
+                </el-col>
+                <el-col :span="12">
+                    <el-form-item label="车库面积">
+                        <el-input v-model="form.garage_area" @keyup.native="onkeyupPrice($event)" placeholder="数字，小数点两位，单位平方米">
+                            <template slot="append">平方米</template>
+                        </el-input>
+                    </el-form-item>
+                </el-col>
+            </el-row>
+            <el-row>
+                <el-col :span="12">
+                    <el-form-item label="长度">
+                        <el-input v-model="form.room_length" @keyup.native="onkeyupPrice($event)" placeholder="数字，小数点两位，单位平方米">
+                            <template slot="append">米</template>
+                        </el-input>
+                    </el-form-item>
+                </el-col>
+                <el-col :span="12">
+                    <el-form-item label="宽度">
+                        <el-input v-model="form.room_width" @keyup.native="onkeyupPrice($event)" placeholder="数字，小数点两位，单位平方米">
+                            <template slot="append">米</template>
+                        </el-input>
+                    </el-form-item>
+                </el-col>
+            </el-row>
+            <el-row>
+                <el-col :span="12">
+                    <el-form-item label="区域">
+                        <el-select v-model="form.location">
+                            <el-option v-for="item in location" :key="item.value_id" :label="item.value_name" :value="item.value_id"></el-option>
+                        </el-select>
+                    </el-form-item>
+                </el-col>
+                <el-col :span="12">
+                    <el-form-item label="用途">
+                        <el-select v-model="form.space_usage">
+                            <el-option v-for="item in space_usage" :key="item.value_id" :label="item.value_name" :value="item.value_id"></el-option>
+                        </el-select>
+                    </el-form-item>
+                </el-col>
+            </el-row>
+            <el-row>
+                <el-col :span="12">
+                    <el-form-item label="物业类型">
+                        <el-select v-model="form.property_type">
+                            <el-option v-for="item in property_type" :key="item.value_id" :label="item.value_name" :value="item.value_id"></el-option>
+                        </el-select>
+                    </el-form-item>
+                </el-col>
+                <el-col :span="12">
+                    <el-form-item label="房间性质">
+                        <el-select v-model="form.room_nature">
+                            <el-option v-for="item in room_nature" :key="item.value_id" :label="item.value_name" :value="item.value_id"></el-option>
+                        </el-select>
+                    </el-form-item>
+                </el-col>
+            </el-row>
+            <el-row>
+                <el-col :span="12">
+                    <el-form-item label="销售状态">
+                        <el-switch v-model="form.is_sold" active-text="已售"></el-switch>
+                    </el-form-item>
+                </el-col>
+            </el-row>
+            <el-row>
+                <el-col :span="24">
+                    <el-form-item label="备注">
+                        <el-input type="textarea" v-model="form.remark"></el-input>
+                    </el-form-item>
+                </el-col>
+            </el-row>
+            <el-form-item>
+                <el-button type="primary" @click="submit()">保存</el-button>
+                <el-button>取消</el-button>
+            </el-form-item>
+        </el-form>
+    </div>
+</template>
+
+<script>
+export default {
+    data () {
+        var checkNumFloor = (rule, value, callback) => {
+            if (value > 255 || value < 0) {
+                callback(new Error('楼层数不能大于255'));
+            } else {
+                callback();
+            }
+        };
+        return {
+            form: {
+                room_code: '', // 房间编码
+                room_name: '', // 房间名称
+                room_feature: '', // 房间功能
+                room_decoration: '', // 装修
+                room_unit: '', // 户型
+                room_toward: '', // 朝向
+                built_area: '', // 建筑面积
+                usable_area: '', // 使用面积
+                garage_area: '', // 车库面积
+                num_floor: '', // 楼层数
+                guide_price: '', // 指导单价
+                is_sold: false, // 已售
+                room_length: '', // 长度
+                room_width: '', // 宽度
+                location: '', // 区域
+                space_usage: '', // 用途
+                property_type: '', // 物业类型
+                room_nature: '', // 房间性质
+                remark: '' // 备注
+            },
+            form_rules: {
+                room_code: [
+                    { required: true, message: '房间编码不能为空', trigger: 'blur'}
+                ],
+                room_name: [
+                    { required: true, message: '房间名称不能为空', trigger: 'blur'}
+                ],
+                room_feature: [
+                    { required: true, message: '房间功能不能为空', trigger: 'change'}
+                ],
+                built_area: [
+                    { required: true, message: '建筑面积不能为空', trigger: 'blur'}
+                ],
+                num_floor: [
+                    { required: true, message: '楼层数不能为空', trigger: 'blur'},
+                    { validator: checkNumFloor,  trigger: 'blur'}
+                ],
+                guide_price: [
+                    { required: true, message: '指导单价不能为空', trigger: 'blur'}
+                ]
+            },
+            room_feature: [], // 字典 - 房间功能
+            room_decoration: [], // 字典 - 装修
+            room_unit: [], // 字典 - 户型
+            room_toward: [], // 字典 - 朝向
+            location: [], // 字典 - 区域
+            space_usage: [], // 字典 - 用途
+            property_type: [], // 字典 - 物业类型
+            room_nature: [] // 字典 - 房间性质
+        }
+    },
+    props: {
+        id: {
+            type: Number
+        },
+        project_id: {
+            type: Number
+        },
+        building_id: {
+            type: Number
+        },
+        floor_id: {
+            type: Number
+        },
+        all_name: {
+            type: String
+        }
+    },
+    created() {
+        console.log(this.all_name)
+        let _this = this;
+        this.$https.all([
+            this.getDic('pms_type_roomfunc', 'room_feature'),
+            this.getDic('pms_type_decoration', 'room_decoration'),
+            this.getDic('pms_type_unit', 'room_unit'),
+            this.getDic('pms_type_direction', 'room_toward'),
+            this.getDic('pms_type_region', 'location'),
+            this.getDic('pms_type_usage', 'space_usage'),
+            this.getDic('pms_type_property', 'property_type'),
+            this.getDic('pms_type_roomprop', 'room_nature')
+        ]).then(this.$https.spread(function (acct, perms) {
+            if (_this.id) { // 编辑
+                _this.getOldData();
+            }
+        }))
+    },
+    methods: {
+        getOldData() { // 获取编辑数据
+
+            this.$https.get('/api/pms_base_rooms/GetRoomDetail?room_id=' + this.id).then((result) => {
+                if (result.data.code == 0) {
+                    let _data = result.data.data;
+                    this.form.room_code = _data.room_code; // 房间编码
+                    this.form.room_name = _data.room_name; // 房间名称
+                    this.form.room_feature = _data.room_feature == 0 ? '' :_data.room_feature; // 房间功能
+                    this.form.room_decoration = _data.room_decoration == 0 ? '' :_data.room_decoration; // 装修
+                    this.form.room_unit = _data.room_unit == 0 ? '' :_data.room_unit; // 户型
+                    this.form.room_toward = _data.room_toward == 0 ? '' :_data.room_toward; // 朝向
+                    this.form.built_area = _data.built_area == 0 ? '' :_data.built_area; // 建筑面积
+                    this.form.usable_area = _data.usable_area == 0 ? '' :_data.usable_area; // 使用面积
+                    this.form.garage_area = _data.garage_area == 0 ? '' :_data.garage_area; // 车库面积
+                    this.form.num_floor = _data.num_floor; // 楼层数
+                    this.form.is_sold = _data.is_sold; // 已售
+                    this.form.room_length = _data.room_length == 0 ? '' :_data.room_length; // 长度
+                    this.form.room_width = _data.room_width == 0 ? '' :_data.room_width; // 宽度
+                    this.form.location = _data.location == 0 ? '' :_data.location; // 区域
+                    this.form.space_usage = _data.space_usage == 0 ? '' :_data.space_usage; // 用途
+                    this.form.property_type = _data.property_type == 0 ? '' :_data.property_type; // 物业类型
+                    this.form.room_nature = _data.room_nature == 0 ? '' :_data.room_nature; // 房间性质
+                    this.form.guide_price = _data.guide_price; // 指导单价
+                    this.form.remark = _data.remark; // 备注
+                } else {
+                    this.$message({
+                        type: 'error',
+                        showClose: true,
+                        message: result.data.message
+                    })
+                }
+            })
+        },
+        submit() { // 提交
+            this.$refs.form.validate((valid) => {
+                if (valid) {
+                    let _postData = JSON.parse(JSON.stringify(this.form));
+                    _postData.project_id = this.project_id;
+                    _postData.building_id = this.building_id;
+                    _postData.floor_id = this.floor_id;
+                    _postData.parking_area = 0; // 车位面积
+                    _postData.full_name = this.all_name + this.form.room_name; // 房间完整名称
+
+                    _postData.room_feature = this.form.room_feature == '' ? 0 :this.form.room_feature; // 装修
+                    _postData.room_decoration = this.form.room_decoration == '' ? 0 :this.form.room_decoration; // 装修
+                    _postData.room_unit = this.form.room_unit == '' ? 0 :this.form.room_unit; // 户型
+                    _postData.room_toward = this.form.room_toward == '' ? 0 :this.form.room_toward; // 朝向
+                    _postData.built_area = this.form.built_area == '' ? 0 :this.form.built_area; // 建筑面积
+                    _postData.usable_area = this.form.usable_area == '' ? 0 :this.form.usable_area; // 使用面积
+                    _postData.garage_area = this.form.garage_area == '' ? 0 :this.form.garage_area; // 车库面积
+                    _postData.room_length = this.form.room_length == '' ? 0 :this.form.room_length; // 长度
+                    _postData.room_width = this.form.room_width == '' ? 0 :this.form.room_width; // 宽度
+                    _postData.location = this.form.location == '' ? 0 :this.form.location; // 区域
+                    _postData.space_usage = this.form.space_usage == '' ? 0 :this.form.space_usage; // 用途
+                    _postData.property_type = this.form.property_type == '' ? 0 :this.form.property_type; // 物业类型
+                    _postData.room_nature = this.form.room_nature == '' ? 0 :this.form.room_nature; // 房间性质
+                    
+                    if (this.id) { // 编辑
+                        _postData.room_id = parseInt(this.id);
+                        this.$https.post('/api/pms_base_rooms/ModifyRoom', _postData).then((result) => {
+                            if (result.data.code == 0) {
+                                this.$message({
+                                    type: 'success',
+                                    showClose: true,
+                                    message: '编辑成功',
+                                    duration: 1500,
+                                    onClose: () => {
+                                        // 关闭当前dialog，
+                                        this.closeDialog('dialogRoomEdit');
+                                        // 刷新列表
+                                        this.$emit('parentGetDataList');
+                                    }
+                                })
+                            } else {
+                                this.$message({
+                                    type: 'error',
+                                    showClose: true,
+                                    message: result.data.message
+                                })
+                            }
+                        })
+                    } else { // 新增
+
+                        this.$https.post('/api/pms_base_rooms/InsertRoom', _postData).then((result) => {
+                            if (result.data.code == 0) {
+                                this.$message({
+                                    type: 'success',
+                                    showClose: true,
+                                    message: '添加成功',
+                                    duration: 1500,
+                                    onClose: () => {
+                                        // 关闭当前dialog，
+                                        this.closeDialog('dialogRoomAdd');
+                                        // 刷新列表
+                                        this.$emit('parentGetDataList');
+                                    }
+                                })
+                            } else {
+                                this.$message({
+                                    type: 'error',
+                                    showClose: true,
+                                    message: result.data.message
+                                })
+                            }
+                        })
+                    }
+                    
+
+                } else {
+                    console.error('验证失败');
+                    return false;
+                }
+            });
+        },
+        getDic(code, dic) { // 根据关键字获取字典值并保存 相应字段
+            this.$https.get('/api/Dicts/GetValues', {
+                params: {
+                    type_code: code
+                }
+            }).then((result) => {
+                if (result.data.code == 0) {
+                    this[dic] = result.data.data;
+                } else {
+                    this.$message({
+                        type: 'error',
+                        showClose: true,
+                        message: result.data.message
+                    })
+                }
+            })
+        },
+        closeDialog(name) { // 关闭当前
+            // this.$refs.form.resetFields(); // 重置表单
+            if (!name) {
+                this.$emit('closeDialog', 'dialogRoomAdd'); // 执行父组件关闭方法
+                this.$emit('closeDialog', 'dialogRoomEdit'); // 执行父组件关闭方法
+            } else {
+                this.$emit('closeDialog', name); // 执行父组件关闭方法
+            }
+        }
+    }
+}
+</script>
+<style scoped>
+</style>

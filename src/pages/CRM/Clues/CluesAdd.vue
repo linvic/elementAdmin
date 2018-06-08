@@ -24,7 +24,7 @@
                 <el-input v-model="form.customer_name" placeholder="请输入"></el-input>
             </el-form-item>
             <el-form-item label="客户联系电话" prop="telephone">
-                <el-input v-model="form.telephone" placeholder="请输入"></el-input>
+                <el-input v-model="form.telephone" placeholder="请输入" :disabled="id !== undefined"></el-input>
             </el-form-item>
             <el-form-item label="企业名称">
                 <el-input v-model="form.enterprise_name" placeholder="请输入" @blur="existCompany()"></el-input>
@@ -303,7 +303,7 @@ export default {
                     // }
                     let _postData = JSON.parse(JSON.stringify(this.form));
                      _postData.classification = this.form.classification.join(',');
-                    _postData.intentional_area = this.form.intentional_area == '' ? 1 : this.form.intentional_area;
+                    _postData.intentional_area = this.form.intentional_area == '' ? 0 : this.form.intentional_area;
                     
                     if (this.id) { // 编辑
                         _postData.c_id = parseInt(this.id);

@@ -16,7 +16,7 @@
                         <el-table-column prop="created_time" label="申请时间"></el-table-column>
                         <el-table-column label="删除客户">
                             <template slot-scope="scope">
-                                <a href="javascript:;" @click="openDetails(scope.row.c_id)">{{scope.row.old_user_name}}</a>
+                                <a href="javascript:;" @click="openDetails(scope.row.c_id)">{{scope.row.customer_name}}</a>
                             </template>
                         </el-table-column>
                         <el-table-column prop="apply_remark" label="删除原因"></el-table-column>
@@ -35,7 +35,7 @@
                         <el-table-column prop="created_time" label="申请时间"></el-table-column>
                         <el-table-column label="变更客户">
                             <template slot-scope="scope">
-                                <a href="javascript:;" @click="openDetails(scope.row.c_id)">{{scope.row.old_user_name}}</a>
+                                <a href="javascript:;" @click="openDetails(scope.row.c_id)">{{scope.row.customer_name}}</a>
                             </template>
                         </el-table-column>
                         <el-table-column prop="apply_remark" label="变更原因"></el-table-column>

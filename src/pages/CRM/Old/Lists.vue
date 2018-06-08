@@ -25,7 +25,7 @@
                 </el-form-item>
             </el-form>
             <el-row>
-                <el-col :span="18">
+                <el-col :span="12">
                     <el-button size="small" @click="crmDel()" icon="el-icon-delete">删除</el-button>
                     <el-select size="small" v-model="formFilter.user_id" style="width: 150px;margin-left:20px;vertical-align: middle;" placeholder="请选择业务员">
                         <el-option label="本人" value="-2"></el-option>
@@ -36,11 +36,19 @@
                         <el-option v-for="item in purchase_intention" :key="item.value_id" :label="item.value_name" :value="item.value_id"></el-option>
                     </el-select>
                 </el-col>
-                <el-col :span="6" class="text-right">
-                    <el-button size="small" type="default" onclick="alert('即将上线')" icon="el-icon-web-heart">关怀客户</el-button>
-                    <el-button size="small" type="success" onclick="alert('敬请期待')" icon="el-icon-upload">导入</el-button>
-                    <el-button size="small" type="success" onclick="alert('敬请期待')" icon="el-icon-web-download">导出</el-button>
-                    <el-button size="small" type="primary" @click="dialogOldAdd = true" icon="el-icon-circle-plus-outline">新增</el-button>
+                <el-col :span="12" class="text-right">
+                    
+                    <el-button-group style="float: right;margin-right: 10px;">
+                        <el-button size="small" type="default" onclick="alert('即将上线')" icon="el-icon-web-heart">关怀客户</el-button>
+                        <el-button size="small" type="primary" @click="dialogOldAdd = true" icon="el-icon-circle-plus-outline">新增</el-button>
+                    </el-button-group>
+
+                    <el-button-group style="float: right;margin-right: 10px;">
+                        <a class="el-button el-button--success el-button--small" :href="this.$https.defaults.baseURL + '/api/Customer_excel/ExportTemplate'" target="_blank"><i class="el-icon-web-download"></i> 下载导入模板</a>
+                        <el-button type="primary" icon="el-icon-web-upload" size="small" @click="Importcustomer()">导入老客户</el-button>
+                    </el-button-group>
+
+                    
                 </el-col>
             </el-row>
             <el-table :data="tableData" style="width: 100%" @selection-change="handleSelectionChange" v-loading="loading">
@@ -113,6 +121,10 @@
         <el-dialog v-if="dialogDetails" title="客户详情" :visible.sync="dialogDetails" append-to-body width="1000px">
             <Details @closeDialog="closeDialog" :id="editId"></Details>
         </el-dialog>
+
+        <el-dialog v-if="dialogImportcustomer" title="导入老客户" :visible.sync="dialogImportcustomer" append-to-body width="400px">
+            <Importcustomer @closeDialog="closeDialog" @parentGetDataList="getDataList"></Importcustomer>
+        </el-dialog>
     </div>
 </template>
 
@@ -121,13 +133,16 @@ import OldAdd from './OldAdd'
 import FollowUp from './../FollowUp'
 import OldToChance from './OldToChance'
 import Details from './../Details'
+import Importcustomer from './Importcustomer'
+
 
 export default {
     components: {
         OldAdd,
         FollowUp,
         OldToChance,
-        Details
+        Details,
+        Importcustomer
     },
     data () {
         return {
@@ -160,7 +175,8 @@ export default {
             dialogOldEdit: false, //编辑
             dialogDetails: false, // 详情
             dialogFollowUp: false, //跟进记录
-            dialogOldToChance: false // 转销售机会
+            dialogOldToChance: false, // 转销售机会
+            dialogImportcustomer: false // 老客户导入
 
         }
     },
@@ -356,6 +372,9 @@ export default {
                     })
                 }
             })
+        },
+        Importcustomer() { // 导入老客户
+            this.dialogImportcustomer = true;
         }
     }
 }

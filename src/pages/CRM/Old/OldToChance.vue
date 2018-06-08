@@ -269,7 +269,7 @@ export default {
         closeDialog(name) { // 关闭当前
             // this.$refs.form.resetFields(); // 重置表单
             if (!name) {
-                this.$emit('closeDialog', 'dialogCluesToChance'); // 执行父组件关闭方法
+                this.$emit('closeDialog', 'dialogOldToChance'); // 执行父组件关闭方法
             } else {
                 this.$emit('closeDialog', name); // 执行父组件关闭方法
             }

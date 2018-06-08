@@ -39,7 +39,7 @@
                 </el-col>
                 <el-col :span="12">
                     <el-form-item label="客户联系电话" prop="telephone">
-                        <el-input v-model="form.telephone" placeholder="请输入"></el-input>
+                        <el-input v-model="form.telephone" placeholder="请输入" :disabled="id !== undefined"></el-input>
                     </el-form-item>
                 </el-col>
             </el-row>
@@ -506,7 +506,6 @@ export default {
                     // }
                     let _postData = JSON.parse(JSON.stringify(this.form));
 
-                     _postData.customer_type = 0;
                      _postData.classification = this.form.classification.join(',');
                      _postData.person_identification_image = this.form.person_identification_image.join(',');
                      _postData.company_identification_image = this.form.company_identification_image.join(','); // 企业证件图

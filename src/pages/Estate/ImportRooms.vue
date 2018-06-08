@@ -5,6 +5,7 @@
             :action="this.$https.defaults.baseURL + '/api/pms_base_rooms/ImportRooms'"
             :accept="acceptTypes.join(',')"
             :before-upload="beforeUpload"
+            with-credentials
             :on-change="handleChange"
             :on-success="onSuccess"
             :on-error="onError"

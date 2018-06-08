@@ -60,11 +60,11 @@
                 </el-table-column>
                 <el-table-column label="当前流程节点"></el-table-column>
                 <el-table-column prop="created_time" label="创建时间"></el-table-column>
-                <el-table-column label="操作" width="480">
+                <el-table-column label="操作" width="380">
                     <template slot-scope="scope">
                         <el-button
                             size="mini"
-                            onclick="alert('？？？')" plain>编辑</el-button>
+                            @click="chanceEdit(scope.row.c_id)" plain>编辑</el-button>
                         <el-button
                             size="mini"
                             type="warning"
@@ -91,6 +91,11 @@
                 </el-pagination>
             </div>
         </el-card>
+
+        <el-dialog v-if="dialogChanceEdit" title="编辑机会客户" :visible.sync="dialogChanceEdit" append-to-body width="1000px">
+            <ChanceEdit @closeDialog="closeDialog" @parentGetDataList="getDataList" :id="editId"></ChanceEdit>
+        </el-dialog>
+
         <el-dialog v-if="dialogFollowUp" title="跟进记录" :visible.sync="dialogFollowUp" append-to-body width="900px">
             <FollowUp @closeDialog="closeDialog" @parentGetDataList="getDataList" :followData="FollowUpObj" :isIntention="false"></FollowUp>
         </el-dialog>
@@ -103,11 +108,13 @@
 <script>
 import FollowUp from './../FollowUp'
 import Details from './../Details'
+import ChanceEdit from './ChanceEdit'
 
 export default {
     components: {
         FollowUp,
-        Details
+        Details,
+        ChanceEdit
     },
     data () {
         return {
@@ -135,6 +142,7 @@ export default {
             tableData: [],
             classification: [], // 字典 - 客户分类
             roleunitUsers: [], // 所属业务员
+            dialogChanceEdit: false, // 编辑
             dialogDetails: false, // 详情
             dialogFollowUp: false //跟进记录
         }
@@ -167,6 +175,10 @@ export default {
         },
         closeDialog(name) { // 关闭弹层
             this[name] = false;
+        },
+        chanceEdit(id) { // 修改
+            this.editId = Number(id);
+            this.dialogChanceEdit = true;
         },
         FollowUp(id, name, type) { // 更进记录
             this.FollowUpObj = {

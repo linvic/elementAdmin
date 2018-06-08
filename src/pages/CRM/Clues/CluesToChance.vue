@@ -193,6 +193,7 @@ export default {
                         _postData.enterprise_name = this.rawform.enterprise_name;
                         _postData.company_identification_type = this.rawform.company_identification_type;
                         _postData.company_identification_number = this.rawform.company_identification_number;
+
                     } else {
                         if (_postData.enterprise_name == '') {
                             this.$message({
@@ -222,6 +223,7 @@ export default {
                         _postData.person_identification_number = this.rawform.person_identification_number;
                     }
                     _postData.classification = this.form.classification.join(',');
+                    _postData.intentional_area = this.form.intentional_area == '' ? 0 : this.form.intentional_area;
                     
                     this.$https.post('/api/Customer/update_customer_clue_to_sale', _postData).then((result) => {
                         if (result.data.code == 0) {

@@ -85,14 +85,15 @@
                                 <el-breadcrumb-item></el-breadcrumb-item>
                             </el-breadcrumb>
                         </el-col>
-                        <el-col :span="12">
-                            <el-button-group style="float: right;margin-left: 10px;">
-                                <a class="el-button el-button--success el-button--small" :href="this.$https.defaults.baseURL + '/api/pms_base_rooms/ExportTemplate?building_id=' + this.building_id" target="_blank"><i class="el-icon-web-download"></i> 导出模板</a>
-                                <el-button type="primary" icon="el-icon-web-upload" size="small" @click="ImportRooms()">导入房间</el-button>
-                            </el-button-group>
+                        <el-col :span="12" class="text-right">
+                            <i class="el-icon-question" style="cursor:pointer;vertical-align: bottom;margin-right:10px;color: #409EFF" @click="showTip()"></i>
                             <el-button-group style="float: right;">
                                 <el-button icon="el-icon-refresh" size="small" plain onclick="window.location.reload()">刷新</el-button>
                                 <el-button type="primary" icon="el-icon-circle-plus-outline" size="small" @click="dialogFloorAdd = true">新增楼层</el-button>
+                            </el-button-group>
+                            <el-button-group style="float: right;margin-right: 10px;">
+                                <a class="el-button el-button--success el-button--small" :href="this.$https.defaults.baseURL + '/api/pms_base_rooms/ExportTemplate?building_id=' + this.building_id" target="_blank"><i class="el-icon-web-download"></i> 下载导入模板</a>
+                                <el-button type="primary" icon="el-icon-web-upload" size="small" @click="ImportRooms()">导入房间</el-button>
                             </el-button-group>
                         </el-col>
                     </el-row>
@@ -605,6 +606,14 @@ export default {
         },
         ImportRooms() { // 导入
             this.dialogImportRooms = true;
+        },
+        showTip() {
+            this.$alert('导入三部曲：<br>1、创建好项目，楼宇、楼层 <br>2、下载导入模版 （必填项为：选择楼层数、房间编码、房间名称、指导单价）<br>3、导入制作好的模版后核对数据', '提示', {
+                dangerouslyUseHTMLString: true,
+                confirmButtonText: '知道了',
+                callback: action => {
+                }
+            });
         }
     },
     computed: {

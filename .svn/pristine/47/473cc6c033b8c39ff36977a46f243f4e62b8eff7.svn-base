@@ -1,0 +1,616 @@
+<template>
+    <div>
+        <el-card>
+            <div slot="header" class="clearfix">
+                <span>房产档案信息管理</span>
+            </div>
+            <el-tabs v-model="tabPosition" type="border-card">
+                <el-tab-pane label="项目信息" name="1" disabled>
+                    <el-row>
+                        <el-col :span="24">
+                            <el-button-group style="float: right;">
+                                <el-button icon="el-icon-refresh" size="small" plain onclick="window.location.reload()">刷新</el-button>
+                                <el-button type="primary" icon="el-icon-circle-plus-outline" size="small" @click="dialogProjectAdd = true">新增项目</el-button>
+                            </el-button-group>
+                        </el-col>
+                    </el-row>
+                    <el-table :data="ProjectTable" style="width: 100%">
+                        <el-table-column prop="project_id" label="ID"></el-table-column>
+                        <el-table-column prop="project_code" label="项目编码"></el-table-column>
+                        <el-table-column prop="project_name" label="项目名称"></el-table-column>
+                        <el-table-column prop="project_addr" label="地址"></el-table-column>
+                        <el-table-column label="操作" width="240">
+                            <template slot-scope="scope">
+                                <el-button
+                                    size="mini"
+                                    type="primary"
+                                    @click="toBuilding(scope.row)" plain>查看楼宇</el-button>
+                                <el-button
+                                    size="mini"
+                                    @click="projectEdit(scope.row.project_id)" plain>编辑</el-button>
+                                <el-button
+                                    size="mini"
+                                    type="danger"
+                                    @click="projectDel(scope.row.project_id)" plain>删除</el-button>
+                            </template>
+                        </el-table-column>
+                    </el-table>
+                </el-tab-pane>
+                <el-tab-pane label="楼宇信息" name="2" disabled>
+                    <el-row>
+                        <el-col :span="12">
+                            <el-breadcrumb separator-class="el-icon-arrow-right" style="line-height:32px;">
+                                <el-breadcrumb-item @click.native="positionBack(1)">{{project_name}}</el-breadcrumb-item>
+                                <el-breadcrumb-item></el-breadcrumb-item>
+                            </el-breadcrumb>
+                        </el-col>
+                        <el-col :span="12">
+                            <el-button-group style="float: right;">
+                                <el-button icon="el-icon-refresh" size="small" plain onclick="window.location.reload()">刷新</el-button>
+                                <el-button type="primary" icon="el-icon-circle-plus-outline" size="small" @click="dialogBuildingAdd = true">新增楼宇</el-button>
+                            </el-button-group>
+                        </el-col>
+                    </el-row>
+                    <el-table :data="BuildingTable" style="width: 100%">
+                        <el-table-column prop="building_id" label="ID"></el-table-column>
+                        <el-table-column prop="building_code" label="楼宇编号"></el-table-column>
+                        <el-table-column prop="building_name" label="楼宇证件名称"></el-table-column>
+                        <el-table-column prop="building_area" label="建筑面积(平米)"></el-table-column>
+                        <el-table-column prop="usable_area" label="使用面积(平米)"></el-table-column>
+                        <el-table-column prop="floor_amount" label="楼层数量"></el-table-column>
+                        <el-table-column prop="capped" label="预售许可证日期"></el-table-column>
+                        <el-table-column label="操作" width="240">
+                            <template slot-scope="scope">
+                                <el-button
+                                    size="mini"
+                                    type="primary"
+                                    @click="toFloor(scope.row)" plain>查看楼层</el-button>
+                                <el-button
+                                    size="mini"
+                                    @click="buildingEdit(scope.row.building_id)" plain>编辑</el-button>
+                                <el-button
+                                    size="mini"
+                                    type="danger"
+                                    @click="buildingDel(scope.row.project_id, scope.row.building_id)" plain>删除</el-button>
+                            </template>
+                        </el-table-column>
+                    </el-table>
+                </el-tab-pane>
+                <el-tab-pane label="楼层信息" name="3" disabled>
+                    <el-row>
+                        <el-col :span="12">
+                            <el-breadcrumb separator-class="el-icon-arrow-right" style="line-height:32px;">
+                                <el-breadcrumb-item @click.native="positionBack(1)">{{project_name}}</el-breadcrumb-item>
+                                <el-breadcrumb-item @click.native="positionBack(2)">{{building_name}}</el-breadcrumb-item>
+                                <el-breadcrumb-item></el-breadcrumb-item>
+                            </el-breadcrumb>
+                        </el-col>
+                        <el-col :span="12">
+                            <el-button-group style="float: right;margin-left: 10px;">
+                                <a class="el-button el-button--success el-button--small" :href="this.$https.defaults.baseURL + '/api/pms_base_rooms/ExportTemplate?building_id=' + this.building_id" target="_blank"><i class="el-icon-web-download"></i> 导出模板</a>
+                                <el-button type="primary" icon="el-icon-web-upload" size="small" @click="ImportRooms()">导入房间</el-button>
+                            </el-button-group>
+                            <el-button-group style="float: right;">
+                                <el-button icon="el-icon-refresh" size="small" plain onclick="window.location.reload()">刷新</el-button>
+                                <el-button type="primary" icon="el-icon-circle-plus-outline" size="small" @click="dialogFloorAdd = true">新增楼层</el-button>
+                            </el-button-group>
+                        </el-col>
+                    </el-row>
+                    <el-table :data="FloorTable" style="width: 100%">
+                        <el-table-column prop="floor_id" label="ID"></el-table-column>
+                        <el-table-column prop="floor_code" label="楼层编号"></el-table-column>
+                        <el-table-column prop="floor_name" label="楼层名称"></el-table-column>
+                        <el-table-column prop="floor_start" label="开始楼层"></el-table-column>
+                        <el-table-column prop="floor_end" label="结束楼层"></el-table-column>
+                        <el-table-column prop="room_start" label="开始房号"></el-table-column>
+                        <el-table-column prop="room_end" label="结束房号"></el-table-column>
+                        <el-table-column label="操作" width="240">
+                            <template slot-scope="scope">
+                                <el-button
+                                    size="mini"
+                                    type="primary"
+                                    @click="toRoom(scope.row)" plain>查看房间</el-button>
+                                <el-button
+                                    size="mini"
+                                    @click="floorEdit(scope.row.floor_id)" plain>编辑</el-button>
+                                <el-button
+                                    size="mini"
+                                    type="danger"
+                                    @click="floorDel(scope.row.building_id, scope.row.floor_id)" plain>删除</el-button>
+                            </template>
+                        </el-table-column>
+                    </el-table>
+                </el-tab-pane>
+                <el-tab-pane label="房间信息" name="4" disabled>
+                    <el-row>
+                        <el-col :span="12">
+                            <el-breadcrumb separator-class="el-icon-arrow-right" style="line-height:32px;">
+                                <el-breadcrumb-item @click.native="positionBack(1)">{{project_name}}</el-breadcrumb-item>
+                                <el-breadcrumb-item @click.native="positionBack(2)">{{building_name}}</el-breadcrumb-item>
+                                <el-breadcrumb-item @click.native="positionBack(3)">{{floor_name}}</el-breadcrumb-item>
+                                <el-breadcrumb-item></el-breadcrumb-item>
+                            </el-breadcrumb>
+                        </el-col>
+                        <el-col :span="12">
+                            <el-button-group style="float: right;">
+                                <el-button icon="el-icon-refresh" size="small" plain onclick="window.location.reload()">刷新</el-button>
+                                <el-button type="primary" icon="el-icon-circle-plus-outline" size="small" @click="dialogRoomAdd = true">新增房间</el-button>
+                            </el-button-group>
+                        </el-col>
+                    </el-row>
+                    <el-table :data="RoomTable" style="width: 100%">
+                        <el-table-column prop="room_id" label="ID" fixed></el-table-column>
+                        <el-table-column prop="room_code" label="房间编号" fixed></el-table-column>
+                        <el-table-column prop="room_name" label="房间名称" fixed></el-table-column>
+                        <el-table-column label="房间功能">
+                            <template slot-scope="scope">
+                                <span>{{ getDicVal(scope.row.room_feature,'room_feature') }}</span>
+                            </template>
+                        </el-table-column>
+                        <el-table-column label="户型">
+                            <template slot-scope="scope">
+                                <span>{{ getDicVal(scope.row.room_unit,'room_unit') }}</span>
+                            </template>
+                        </el-table-column>
+                        <el-table-column label="朝向">
+                            <template slot-scope="scope">
+                                <span>{{ getDicVal(scope.row.room_toward,'room_toward') }}</span>
+                            </template>
+                        </el-table-column>
+                        <el-table-column label="装修">
+                            <template slot-scope="scope">
+                                <span>{{ getDicVal(scope.row.room_decoration,'room_decoration') }}</span>
+                            </template>
+                        </el-table-column>
+                        <el-table-column label="物业类型">
+                            <template slot-scope="scope">
+                                <span>{{ getDicVal(scope.row.property_type,'property_type') }}</span>
+                            </template>
+                        </el-table-column>
+                        <el-table-column prop="built_area" label="建筑面积(平米)"></el-table-column>
+                        <el-table-column prop="usable_area" label="使用面积(平米)"></el-table-column>
+                        <el-table-column prop="is_sold" label="销售状态"></el-table-column>
+                        <el-table-column prop="is_rented" label="使用状态"></el-table-column>
+                        <el-table-column prop="guide_price" label="指导单价(元/平米)"></el-table-column>
+                        <el-table-column label="操作" width="150" fixed="right">
+                            <template slot-scope="scope">
+                                <el-button
+                                    size="mini"
+                                    @click="roomEdit(scope.row.room_id)" plain>编辑</el-button>
+                                <el-button
+                                    size="mini"
+                                    type="danger"
+                                    @click="roomDel(scope.row.floor_id, scope.row.room_id)" plain>删除</el-button>
+                            </template>
+                        </el-table-column>
+                    </el-table>
+                </el-tab-pane>
+                <!-- 分页 -->
+                <div class="text-center m-t">
+                    <el-pagination
+                        @size-change="pageSizeChange"
+                        @current-change="pageIndexChange"
+                        :current-page="pageIndex"
+                        :page-sizes="[10, 15, 20, 30]"
+                        :page-size="pageSize"
+                        layout="total, sizes, prev, pager, next, jumper"
+                        :total="dataTotal">
+                    </el-pagination>
+                </div>
+            </el-tabs>
+
+        </el-card>
+        <!-- dialog -->
+        <el-dialog v-if="dialogProjectAdd" title="新增房产项目" :visible.sync="dialogProjectAdd" append-to-body width="900px">
+            <Project @closeDialog="closeDialog" @parentGetDataList="getDataList"></Project>
+        </el-dialog>
+        <el-dialog v-if="dialogProjectEdit" title="编辑房产项目" :visible.sync="dialogProjectEdit" append-to-body width="900px">
+            <Project @closeDialog="closeDialog" @parentGetDataList="getDataList" :id="editId"></Project>
+        </el-dialog>
+
+        <el-dialog v-if="dialogBuildingAdd" title="新增楼宇" :visible.sync="dialogBuildingAdd" append-to-body width="900px">
+            <Building @closeDialog="closeDialog" @parentGetDataList="getDataList" :project_id="project_id"></Building>
+        </el-dialog>
+        <el-dialog v-if="dialogBuildingEdit" title="编辑楼宇" :visible.sync="dialogBuildingEdit" append-to-body width="900px">
+            <Building @closeDialog="closeDialog" @parentGetDataList="getDataList" :project_id="project_id" :id="editId"></Building>
+        </el-dialog>
+
+        <el-dialog v-if="dialogFloorAdd" title="新增楼层" :visible.sync="dialogFloorAdd" append-to-body width="900px">
+            <Floor @closeDialog="closeDialog" @parentGetDataList="getDataList" :project_id="project_id" :building_id="building_id"></Floor>
+        </el-dialog>
+        <el-dialog v-if="dialogFloorEdit" title="编辑楼层" :visible.sync="dialogFloorEdit" append-to-body width="900px">
+            <Floor @closeDialog="closeDialog" @parentGetDataList="getDataList" :project_id="project_id" :building_id="building_id" :id="editId"></Floor>
+        </el-dialog>
+
+        <el-dialog v-if="dialogRoomAdd" title="新增房间" :visible.sync="dialogRoomAdd" append-to-body width="900px">
+            <Room @closeDialog="closeDialog" @parentGetDataList="getDataList" :project_id="project_id" :building_id="building_id" :floor_id="floor_id" :all_name="(project_name + '#' + building_name + '#' + floor_name + '#')"></Room>
+        </el-dialog>
+        <el-dialog v-if="dialogRoomEdit" title="编辑房间" :visible.sync="dialogRoomEdit" append-to-body width="900px">
+            <Room @closeDialog="closeDialog" @parentGetDataList="getDataList" :project_id="project_id" :building_id="building_id" :floor_id="floor_id" :all_name="(project_name + '#' + building_name + '#' + floor_name + '#')" :id="editId"></Room>
+        </el-dialog>
+
+        <el-dialog v-if="dialogImportRooms" title="导入房间" :visible.sync="dialogImportRooms" append-to-body width="400px">
+            <ImportRooms @closeDialog="closeDialog" @parentGetDataList="getDataList"></ImportRooms>
+        </el-dialog>
+
+    </div>
+</template>
+
+<script>
+import Project from './Project'
+import Building from './Building'
+import Floor from './Floor'
+import Room from './Room'
+import ImportRooms from './ImportRooms'
+
+export default {
+    components: {
+        Project,
+        Building,
+        Floor,
+        Room,
+        ImportRooms
+    },
+    data () {
+        return {
+            editId: null, // 编辑id
+            pageIndex: 1, // 当前页码
+            pageSize: 10, // 页码大小
+            dataTotal: 0, // 数据总数
+            tabPosition: '1', // 步骤
+            project_id: 0, // 选中的project_id
+            project_name: '', // 选中的project_id
+            building_id: 0, // building_id
+            building_name: '', // 选中的project_id
+            floor_id: 0, // floor_id
+            floor_name: '', // 选中的project_id
+            dialogProject: false,
+            ProjectTable: [],
+            BuildingTable: [],
+            FloorTable: [],
+            RoomTable: [],
+            room_feature: [], // 房间功能
+            room_unit: [], // 户型
+            room_toward: [], // 朝向
+            room_decoration: [], // 装修
+            property_type: [], // 物业类型
+            dialogProjectAdd: false, // 新增项目弹层
+            dialogProjectEdit: false, // 编辑项目弹层
+            dialogBuildingAdd: false, // 新增楼宇弹层
+            dialogBuildingEdit: false, // 编辑楼宇弹层
+            dialogFloorAdd: false, // 新增楼层弹层
+            dialogFloorEdit: false, // 编辑楼层弹层
+            dialogRoomAdd: false, // 新增房间弹层
+            dialogRoomEdit: false, // 编辑房间弹层
+            dialogImportRooms: false // 导入
+        }
+    },
+    created() {
+        this.getDic('pms_type_roomfunc', 'room_feature'); // 房间功能
+        this.getDic('pms_type_unit', 'room_unit'); // 户型
+        this.getDic('pms_type_direction', 'room_toward'); // 朝向
+        this.getDic('pms_type_decoration', 'room_decoration'); // 装修
+        this.getDic('pms_type_property', 'property_type'); // 物业类型
+        this.getDataList();
+    },
+    watch: {
+    },
+    methods: {
+        pageSizeChange(val) { // 分页：pageSize改变时
+            this.pageSize = val;
+            this.getDataList();
+        },
+        pageIndexChange(val) { // 分页：当前页码改变时
+            this.pageIndex = val;
+            this.getDataList();
+        },
+        closeDialog(name) { // 关闭弹层
+            this[name] = false;
+        },
+        toBuilding(row) {
+            this.tabPosition = '2'; // 切换到楼宇管理
+            this.pageIndex = 1; // 设置页码 = 1
+            this.project_id = row.project_id;
+            this.project_name = row.project_name;
+            this.getDataList();
+        },
+        toFloor(row) {
+            this.tabPosition = '3'; // 切换到楼层管理
+            this.pageIndex = 1; // 设置页码 = 1
+            this.building_id = row.building_id;
+            this.building_name = row.building_name;
+            this.getDataList();
+        },
+        toRoom(row) {
+            this.tabPosition = '4'; // 切换到房间管理
+            this.dataTotal = 0;
+            this.pageIndex = 1; // 设置页码 = 1
+            this.floor_id = row.floor_id;
+            this.floor_name = row.floor_name;
+            this.getDataList();
+        },
+        getDic(code, dic) { // 根据关键字获取字典值并保存 相应字段
+            this.$https.get('/api/Dicts/GetValues', {
+                params: {
+                    type_code: code
+                }
+            }).then((result) => {
+                if (result.data.code == 0) {
+                    this[dic] = result.data.data;
+                } else {
+                    this.$message({
+                        type: 'error',
+                        showClose: true,
+                        message: result.data.message
+                    })
+                }
+            })
+        },
+        getDicVal(key, dic) { // 根据字典值匹配字典名
+            let text = '';
+            for(var item of this[dic]) {
+                if (key == item.value_id) {
+                    text = item.value_name;
+                }
+            }
+            return text;
+        },
+        getDataList() { // 项目列表
+            switch (this.tabPosition) {
+                case '2':
+                    this.$https.get('/api/pms_base_buildings/GetBuildings', {
+                        params: {
+                            page: this.pageIndex,
+                            page_size: this.pageSize,
+                            project_id: this.project_id
+                        }
+                    }).then((result) => {
+                        if (result.data.code == 0) {
+                            this.BuildingTable = result.data.data.Items;
+                            this.dataTotal = result.data.data.Total;
+                        } else {
+                            this.$message({
+                                type: 'error',
+                                showClose: true,
+                                message: result.data.message
+                            })
+                        }
+                    })
+                    break;
+                case '3':
+                    this.$https.get('/api/pms_base_floors/GetFloors', {
+                        params: {
+                            page: this.pageIndex,
+                            page_size: this.pageSize,
+                            building_id: this.building_id
+                        }
+                    }).then((result) => {
+                        if (result.data.code == 0) {
+                            this.FloorTable = result.data.data.Items;
+                            this.dataTotal = result.data.data.Total;
+                        } else {
+                            this.$message({
+                                type: 'error',
+                                showClose: true,
+                                message: result.data.message
+                            })
+                        }
+                    })
+                    break;
+                case '4':
+                    this.$https.get('/api/pms_base_rooms/GetRooms', {
+                        params: {
+                            page: this.pageIndex,
+                            page_size: this.pageSize,
+                            floor_id: this.floor_id
+                        }
+                    }).then((result) => {
+                        if (result.data.code == 0) {
+                            this.RoomTable = result.data.data.Items;
+                            this.dataTotal = result.data.data.Total;
+                        } else {
+                            this.$message({
+                                type: 'error',
+                                showClose: true,
+                                message: result.data.message
+                            })
+                        }
+                    })
+                    break;
+                default:
+                    this.$https.get('/api/pms_base_projects/GetProjects', {
+                        params: {
+                            page: this.pageIndex,
+                            page_size: this.pageSize
+                        }
+                    }).then((result) => {
+                        if (result.data.code == 0) {
+                            this.ProjectTable = result.data.data.Items;
+                            this.dataTotal = result.data.data.Total;
+                        } else {
+                            this.$message({
+                                type: 'error',
+                                showClose: true,
+                                message: result.data.message
+                            })
+                        }
+                    })
+                    break;
+            }
+        },
+        projectEdit(id) { // 编辑项目
+            this.editId = Number(id);
+            this.dialogProjectEdit = true;
+        },
+        buildingEdit(id) { // 编辑
+            this.editId = Number(id);
+            this.dialogBuildingEdit = true;
+        },
+        floorEdit(id) { // 编辑
+            this.editId = Number(id);
+            this.dialogFloorEdit = true;
+        },
+        roomEdit(id) { // 编辑
+            this.editId = Number(id);
+            this.dialogRoomEdit = true;
+        },
+        projectDel(id) { // 删除项目
+            this.$confirm('您确定要将删除该项目吗?', '提示', {
+                confirmButtonText: '确定',
+                cancelButtonText: '取消',
+                type: 'warning'
+            }).then(() => {
+                this.$https.post('/api/pms_base_projects/BatchDelete', {
+                    project_id: [id]
+                }).then((result) => {
+                    if (result.data.code == 0) {
+                        this.$message({
+                            type: 'success',
+                            showClose: true,
+                            message: '删除成功',
+                            duration: 1500,
+                            onClose: () => {
+                                this.getDataList();
+                            }
+                        })
+                    } else {
+                        this.$message({
+                            type: 'error',
+                            showClose: true,
+                            message: result.data.message
+                        })
+                    }
+                })
+
+            }).catch(() => {
+            });
+        },
+        buildingDel(projectId, id) { // 删除楼宇
+            this.$confirm('您确定要将删除该楼宇吗?', '提示', {
+                confirmButtonText: '确定',
+                cancelButtonText: '取消',
+                type: 'warning'
+            }).then(() => {
+                this.$https.post('/api/pms_base_buildings/BatchDelete', {
+                    project_id: projectId,
+                    building_id: [id]
+                }).then((result) => {
+                    if (result.data.code == 0) {
+                        this.$message({
+                            type: 'success',
+                            showClose: true,
+                            message: '删除成功',
+                            duration: 1500,
+                            onClose: () => {
+                                this.getDataList();
+                            }
+                        })
+                    } else {
+                        this.$message({
+                            type: 'error',
+                            showClose: true,
+                            message: result.data.message
+                        })
+                    }
+                })
+
+            }).catch(() => {
+            });
+        },
+        floorDel(buildingId, id) { // 删除项楼层
+            this.$confirm('您确定要将删除该楼层吗?', '提示', {
+                confirmButtonText: '确定',
+                cancelButtonText: '取消',
+                type: 'warning'
+            }).then(() => {
+                this.$https.post('/api/pms_base_floors/BatchDelete', {
+                    building_id: buildingId,
+                    floor_id: [id]
+                }).then((result) => {
+                    if (result.data.code == 0) {
+                        this.$message({
+                            type: 'success',
+                            showClose: true,
+                            message: '删除成功',
+                            duration: 1500,
+                            onClose: () => {
+                                this.getDataList();
+                            }
+                        })
+                    } else {
+                        this.$message({
+                            type: 'error',
+                            showClose: true,
+                            message: result.data.message
+                        })
+                    }
+                })
+
+            }).catch(() => {
+            });
+        },
+        roomDel(floorId, id) { // 删除房间
+            this.$confirm('您确定要将删除该房间吗?', '提示', {
+                confirmButtonText: '确定',
+                cancelButtonText: '取消',
+                type: 'warning'
+            }).then(() => {
+                this.$https.post('/api/pms_base_rooms/BatchDelete', {
+                    floor_id: floorId,
+                    room_id: [id]
+                }).then((result) => {
+                    if (result.data.code == 0) {
+                        this.$message({
+                            type: 'success',
+                            showClose: true,
+                            message: '删除成功',
+                            duration: 1500,
+                            onClose: () => {
+                                this.getDataList();
+                            }
+                        })
+                    } else {
+                        this.$message({
+                            type: 'error',
+                            showClose: true,
+                            message: result.data.message
+                        })
+                    }
+                })
+
+            }).catch(() => {
+            });
+        },
+        positionBack(step) {
+            this.tabPosition = '' + step;
+            this.pageIndex = 1; // 设置页码 = 1
+            this.getDataList();
+            if (step === 1) { // 后退到项目列表
+
+                this.project_id = 0;
+                this.project_name = '';
+                this.building_id = 0;
+                this.building_name = '';
+                this.floor_id = 0;
+                this.floor_name = '';
+            } else if (step === 2) {
+                this.building_id = 0;
+                this.building_name = '';
+                this.floor_id = 0;
+                this.floor_name = '';
+            } else if (step === 3) {
+                this.floor_id = 0;
+                this.floor_name = '';
+            }
+        },
+        ImportRooms() { // 导入
+            this.dialogImportRooms = true;
+        }
+    },
+    computed: {
+    }
+}
+</script>
+
+<style scoped>
+</style>
