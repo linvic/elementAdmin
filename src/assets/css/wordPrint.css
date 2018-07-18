@@ -1,0 +1,74 @@
+@media print {
+    html, body, #app, wrapper {
+        height: auto;
+    }
+    .excel table {
+        line-height: 2;
+    }
+}
+
+.print {
+    width: 720px;
+}
+.print_header {
+    font-size: 14px;
+    border-bottom: 1px solid #000;
+}
+.word {
+    color: #000;
+}
+.word .text-indent {
+    text-indent: 2em;
+}
+.text-left {
+    text-align: left;
+}
+.text-center {
+    text-align: center;
+}
+.text-right {
+    text-align: right;
+}
+.font-song {
+    font-family: "宋体";
+}
+.font28 {
+    font-size: 28px;
+}
+.font24 {
+    font-size: 24px;
+}
+.font21 {
+    font-size: 21px;
+}
+.font20 {
+    font-size: 20px;
+}
+.font18 {
+    font-size: 18px;
+}
+.line2{
+    line-height: 2;
+}
+.line18{
+    line-height: 1.8;
+}
+
+.excel {
+    color: #000;
+}
+.excel table {
+    width: 100%;
+    border-collapse: collapse;
+    border-spacing: 0;
+    text-align: center;
+}
+.excel table th {
+    font-weight: normal;
+}
+.excel table td {
+    border: 1px solid #000;
+    padding: 0 6px;
+    word-wrap: break-word;
+    word-break: break-all;
+}

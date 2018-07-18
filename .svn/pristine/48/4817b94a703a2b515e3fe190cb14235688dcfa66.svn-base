@@ -1,0 +1,323 @@
+<template>
+    <div>
+        <el-row :gutter="20">
+            <el-col :sm="24" :md="12" v-show="!this.frameParame.type">
+                <el-form ref="form" :model="documentData" label-width="120px">
+                    <el-form-item label="客户名称" prop="c_id">
+                        <el-select v-model="documentData.c_id" @change="changeCustomer" filterable placeholder="请选择客户">
+                            <el-option
+                                v-for="item in myCustomers"
+                                :key="item.c_id"
+                                :label="item.customer_name"
+                                :value="item.c_id">
+                            </el-option>
+                        </el-select>
+                    </el-form-item>
+                    <el-form-item label="单元" prop="room_all_name">
+                        <el-input v-model="documentData.room_all_name"></el-input>
+                    </el-form-item>
+                    <el-form-item label="短信通知时间" prop="notify_time">
+                        <el-date-picker v-model="documentData.notify_time" :editable="false" type="date" placeholder="选择日期" format="yyyy年MM月dd日" value-format="yyyy年MM月dd日"></el-date-picker>
+                    </el-form-item>
+                    <el-form-item label="签署协议期限(起)" prop="sign_date_start">
+                        <el-date-picker v-model="documentData.sign_date_start" :editable="false" :picker-options="pickerBeginDateBefore" type="date" placeholder="选择日期" format="yyyy年MM月dd日" value-format="yyyy年MM月dd日"></el-date-picker>
+                    </el-form-item>
+                    <el-form-item label="签署协议期限(止)" prop="sign_date_end">
+                        <el-date-picker v-model="documentData.sign_date_end" :editable="false" :picker-options="pickerBeginDateAfter" type="date" placeholder="选择日期" format="yyyy年MM月dd日" value-format="yyyy年MM月dd日"></el-date-picker>
+                    </el-form-item>
+                    <el-form-item label="公司" prop="company_name">
+                        <el-input v-model="documentData.company_name"></el-input>
+                    </el-form-item>
+                    <el-form-item label="联系人姓名" prop="link_man_name">
+                        <el-input v-model="documentData.link_man_name"></el-input>
+                    </el-form-item>
+                    <el-form-item label="联系人电话" prop="link_man_tel">
+                        <el-input v-model="documentData.link_man_tel"></el-input>
+                    </el-form-item>
+                    <el-form-item>
+                        <el-button type="primary" @click="submit()" icon="el-icon-tickets">保存文档</el-button>
+                        <el-button icon="el-icon-web-reply">取消</el-button>
+                        <el-button type="success" @click="onPrint()" icon="el-icon-printer">打印</el-button>
+                    </el-form-item>
+               </el-form>
+            </el-col>
+            <el-col :sm="24" :md="!this.frameParame.type ? 12 : 24">
+                <div class="text-right" v-show="this.frameParame.type === 'print'">
+                    <el-button type="primary" @click="onPrint()" icon="el-icon-printer" circle>点击打印本文档</el-button>
+                </div>
+                <div class="print">
+                    <div ref="printbox">
+                        <AdvanceSaleNotice-Template @setTemplateHtml="SetTemplateHtml" :documentData="documentData"></AdvanceSaleNotice-Template>
+                        <!--
+<div class="word font-song font18 line18">
+<br>
+<h2 class="text-center font28">预售通知书</h2>
+<br>
+<p>尊敬的{{customer_name}}：</p>
+<p class="text-indent">贵司定制购买的凤岗天安数码城{{room_all_name}}已取得预售许可证。</p>
+<p class="text-indent">依据《定制协议》约定，当定制物业取得预售许可时，贵司应在接到我司通知之日起(5个工作日)按照我司要求就定制物业签署《企业入园进驻认购协议书》，我司已经在{{notify_time}}通过电话/短信通知，但贵司还未到我司签署《企业入园进驻认购协议书》，现我司再次书面将相关事项通知如下：</p>
+<p class="text-indent">一、签署《企业入园进驻认购协议书》期限</p>
+<p class="text-indent">签署《企业入园进驻认购协议书》期限为{{sign_date_start}}至{{sign_date_end}}，每日上午9：00至12：00，下午13：30-18：00。</p>
+<p class="text-indent">二、签署《企业入园进驻认购协议书》地点</p>
+<p class="text-indent">凤岗天安数码城T5企业定制中心 </p>
+<p class="text-indent">三、签署内容：</p>
+<p class="text-indent">1、《企业入园进驻认购协议书》；</p>
+<p class="text-indent">2、《企业入园进驻认购协议书》的补充协议；</p>
+<p class="text-indent">3、签署园区运营服务协议；</p>
+<p class="text-indent">四、需携带的资料：</p>
+<p class="text-indent">1、签署《企业入园进驻认购协议书》需携带的资料（详见附件一）；</p>
+<p class="text-indent">2、如贵司需办理银行贷款，需携带经营用房按揭贷款营销指引所列资料（详见附件二）。</p>
+<p class="text-indent">五、恳请贵司依照本通知书第一、二、三、四条的内容携带资料前往我司签署协议，如贵司未能按照本通知书第一、二、三、四条的内容携带资料前往我司签署协议，则我司将按照《定制协议》的相关约定处理。</p>
+<p class="text-right">{{company_name}}</p>
+<p class="text-right">联系人：{{link_man_name}} 联系电话：{{link_man_tel}}</p>
+</div>
+ -->
+                    </div>
+                </div>
+                
+            </el-col>
+        </el-row>
+    </div>
+</template>
+
+<script>
+import '@/assets/css/wordPrint.css'
+import Vue from 'vue'
+import Print from '@/plugs/print'
+import axios from 'axios'
+Vue.use(Print)
+Vue.component('AdvanceSaleNotice-Template', function (resolve, reject) {
+    axios.get('/api/file_template/get_file_templatedetails_by_file_code?file_code=AdvanceSaleNotice').then((result) => {
+        let templateHtml = result.data.data.template_html; // 将模板 html 传到父组件 用于 数据提交
+        // <span class="placeholder"></span>
+        let _html = result.data.data.template_html.replace(/{{/g, '{{documentData.').replace(/}}/g, ' || "______" }}')
+
+        resolve({
+            template: _html,
+            props: {
+                documentData: {
+                    type: Object
+                }
+            },
+            data() {
+                return {
+                    templateHtml: ''
+                }
+            },
+            methods: {
+            },
+            created() {
+                this.$emit('setTemplateHtml', templateHtml); // 将模板 html 传到父组件 用于 数据提交
+            }
+        })
+    })
+})
+export default {
+    props: {
+        frameParame: {
+            type: Object
+        },
+        editId: {
+            type: Number()
+        }
+    },
+    data () {
+        return {
+            documentData: {
+                c_id: '', // 客户ID
+                customer_name: '', //客户姓名
+                file_template_html: '', // 文件模板_HTML
+
+                room_all_name: '', //单元名
+                notify_time: '', //短信通知时间
+                sign_date_start: '', // 签署协议期限(起)
+                sign_date_end: '', // 签署协议期限(止)
+                company_name: '', // 公司
+                link_man_name: '', // 联系人姓名
+                link_man_tel: '', // 联系人电话
+            },
+            pickerBeginDateBefore: {
+                disabledDate: (time) => {
+                    let initialDateVal = this.documentData.sign_date_end.replace('年','-').replace('月','-').replace('日','');
+                    let beginDateVal = new Date(initialDateVal);
+                    if (beginDateVal) {
+                        return time.getTime() > beginDateVal;
+                    }
+                }
+            },
+            pickerBeginDateAfter: {
+                disabledDate: (time) => {
+                    let initialDateVal = this.documentData.sign_date_start.replace('年','-').replace('月','-').replace('日','');
+                    let beginDateVal = new Date(initialDateVal);
+                    if (beginDateVal) {
+                        return time.getTime() < beginDateVal;
+                    }
+                }
+            },
+            myCustomers: [] // 我的客户列表
+        }
+    },
+    created() {
+        let _this = this;
+        this.$https.all([
+            this.getMyCustomer()
+        ]).then(this.$https.spread(function (acct, perms) {
+            if (_this.editId) { // 编辑文档
+                _this.getOldData(); // 获取旧数据
+            }
+        }))
+    },
+    watch: {
+    },
+    methods: {
+        onPrint() {
+            this.$print(this.$refs.printbox)
+        },
+        SetTemplateHtml(html) {
+            this.documentData.file_template_html = html;
+        },
+        getMyCustomer() { // 获取我的客户 list
+            this.$https.get('/api/Customer/page', {
+                params: {
+                    currentPage: 1,
+                    pageSize: 9999,
+                    customer_classify: 999,
+                    user_id: -2
+                }
+            }).then((result) => {
+                if (result.data.code == 0) {
+                    this.myCustomers = result.data.data.Items;
+                } else {
+                    this.$message({
+                        type: 'error',
+                        showClose: true,
+                        message: result.data.message
+                    })
+                }
+            })
+        },
+        changeCustomer(val) {
+            let obj = {};
+            obj = this.myCustomers.find((item) => {
+                return item.c_id === val;
+            })
+            this.documentData.customer_name = obj.customer_name;
+        },
+        getOldData() { // 获取编辑数据
+
+            this.$https.get('/api/file_common/get_file_commondetails?fc_id=' + this.editId).then((result) => {
+                if (result.data.code == 0) {
+                    let _data = result.data.data;
+                    this.documentData.c_id = _data.c_id; // 客户ID
+                    this.documentData.customer_name = _data.customer_name; //客户姓名
+                    this.documentData.file_template_html = _data.file_template_html; // 文件模板_HTML
+                    let _file_json_data = JSON.parse(_data.file_json_data);
+                    
+                    this.documentData.room_all_name = _file_json_data.room_all_name; //单元名
+                    this.documentData.notify_time = _file_json_data.notify_time; //短信通知时间
+                    this.documentData.sign_date_start = _file_json_data.sign_date_start; // 签署协议期限(起)
+                    this.documentData.sign_date_end = _file_json_data.sign_date_end; // 签署协议期限(止)
+                    this.documentData.company_name = _file_json_data.company_name; // 公司
+                    this.documentData.link_man_name = _file_json_data.link_man_name; // 联系人姓名
+                    this.documentData.link_man_tel = _file_json_data.link_man_tel; // 联系人电话
+                } else {
+                    this.$message({
+                        type: 'error',
+                        showClose: true,
+                        message: result.data.message
+                    })
+                }
+            })
+        },
+        submit() { // 提交
+            this.$refs.form.validate((valid) => {
+                if (valid) {
+
+                    let _postData = {
+                        c_id: this.documentData.c_id, // 客户ID
+                        customer_name: this.documentData.customer_name, //客户姓名
+                        file_template_html: this.documentData.file_template_html, // 文件模板_HTML
+                        file_template_id: this.frameParame.id, // 文件模板id
+                        file_name: this.frameParame.name, // 文件模板名称
+                        file_type_code: this.frameParame.code // 文件模板code
+                    }
+                    _postData.file_json_data = JSON.stringify({
+                        room_all_name: this.documentData.room_all_name, //单元名
+                        notify_time: this.documentData.notify_time, //短信通知时间
+                        sign_date_start: this.documentData.sign_date_start, // 签署协议期限(起)
+                        sign_date_end: this.documentData.sign_date_end, // 签署协议期限(止)
+                        company_name: this.documentData.company_name, // 公司
+                        link_man_name: this.documentData.link_man_name, // 联系人姓名
+                        link_man_tel: this.documentData.link_man_tel // 联系人电话
+                    })
+
+                    if (this.editId) { // 编辑
+                        _postData.fc_id = parseInt(this.editId);
+                        this.$https.post('/api/file_common/update_file_common', _postData).then((result) => {
+                            if (result.data.code == 0) {
+                                this.$message({
+                                    type: 'success',
+                                    showClose: true,
+                                    message: '成功编辑文档',
+                                    duration: 1500,
+                                    onClose: () => {
+                                        // 关闭当前dialog，
+                                        this.closeDialog();
+                                        // 刷新列表
+                                        this.$emit('parentGetDataList');
+                                    }
+                                })
+                            } else {
+                                this.$message({
+                                    type: 'error',
+                                    showClose: true,
+                                    message: result.data.message
+                                })
+                            }
+                        })
+                    } else { // 新增
+                        this.$https.post('/api/file_common/create_file_common', _postData).then((result) => {
+                            if (result.data.code == 0) {
+                                this.$message({
+                                    type: 'success',
+                                    showClose: true,
+                                    message: '成功保存文档',
+                                    duration: 1500,
+                                    onClose: () => {
+                                        // 关闭当前dialog，
+                                        this.closeDialog();
+                                        // 刷新列表
+                                        this.$emit('parentGetDataList');
+                                    }
+                                })
+                            } else {
+                                this.$message({
+                                    type: 'error',
+                                    showClose: true,
+                                    message: result.data.message
+                                })
+                            }
+                        })
+                    }
+                    
+
+                } else {
+                    console.error('验证失败');
+                    return false;
+                }
+            });
+        },
+        closeDialog(name) {
+            if (!name) {
+                this.$emit('closeDialog', 'Frame'); // 执行父组件关闭方法
+            } else {
+                this.$emit('closeDialog', name); // 执行父组件关闭方法
+            }
+        }
+    }
+}
+
+</script>
+
+<style scoped>
+</style>

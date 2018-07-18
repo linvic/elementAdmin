@@ -1,0 +1,36 @@
+@media print {
+    html, body, #app, wrapper {
+        height: auto;
+    } 
+}
+
+.print {
+    width: 720px;
+}
+.word {
+    color: #000;
+}
+.word .text-indent {
+    text-indent: 2em;
+}
+.text-left {
+    text-align: left;
+}
+.text-center {
+    text-align: center;
+}
+.text-right {
+    text-align: right;
+}
+.font-song {
+    font-family: "宋体";
+}
+.font24 {
+    font-size: 24px;
+}
+.font21 {
+    font-size: 21px;
+}
+.line18{
+    line-height: 2;
+}

@@ -1,0 +1,2 @@
+webpackJsonp([31],{eerB:function(e,n,t){"use strict";Object.defineProperty(n,"__esModule",{value:!0});var i={render:function(){var e=this.$createElement,n=this._self._c||e;return n("div",{directives:[{name:"loading",rawName:"v-loading",value:this.loading,expression:"loading"}]},[n("el-card",[this._v("\n        "+this._s(this.msg)+"\n    ")])],1)},staticRenderFns:[]},s=t("Aizv")({data:function(){return{msg:"主页预留",loading:!0}},mounted:function(){this.loading=!1}},i,!1,null,null,null);n.default=s.exports}});
+//# sourceMappingURL=31.2e764d57078b5cd29c0c.js.map

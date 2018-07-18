@@ -1,0 +1,48 @@
+<template>
+    <div>
+        <el-card>
+            <!-- 预售通知书 -->
+            <AdvanceSaleNotice v-if="template_code === 'AdvanceSaleNotice'"></AdvanceSaleNotice>
+            <!-- 购买意向书 -->
+            <PurchaseIntention v-else-if="template_code === 'PurchaseIntention'"></PurchaseIntention>
+            <div v-else>文档加载错误</div>
+        </el-card>
+    </div>
+</template>
+
+<script>
+
+import AdvanceSaleNotice from './Templates/AdvanceSaleNotice' // 预售通知书
+import PurchaseIntention from './Templates/PurchaseIntention' // 购买意向书
+
+export default {
+    components: {
+        AdvanceSaleNotice,
+        PurchaseIntention
+    },
+    props: {
+        frameParame: {
+            type: Object
+        }
+    },
+    data () {
+        return {
+            template_code: ''
+        }
+    },
+    created() {
+        console.log(this.frameParame);
+        if(!this.frameParame) {
+            alert('模板加载失败，请选择模板')
+        }
+        this.template_code = this.frameParame.code;
+    },
+    watch: {
+    },
+    methods: {
+    }
+}
+</script>
+
+<style scoped>
+</style>

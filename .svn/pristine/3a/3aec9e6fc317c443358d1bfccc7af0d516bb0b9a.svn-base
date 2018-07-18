@@ -1,0 +1,121 @@
+<template>
+    <div>
+        <el-row :gutter="20">
+            <el-col :sm="24" :md="12">
+                <el-form ref="form" :model="documentData" label-width="120px">
+                    <el-form-item label="客户名称">
+                        <el-input v-model="documentData.customer_name"></el-input>
+                    </el-form-item>
+                    <el-form-item label="公司地址">
+                        <el-input v-model="documentData.address"></el-input>
+                    </el-form-item>
+                    <el-form-item label="公司主营业务">
+                        <el-input v-model="documentData.company_scope_of_operation"></el-input>
+                    </el-form-item>
+                    <el-form-item label="公司简介">
+                        <el-input v-model="documentData.company_briefing"></el-input>
+                    </el-form-item>
+                    <el-form-item label="物业面积">
+                        <el-input v-model="documentData.built_area"></el-input>
+                    </el-form-item>
+                    <el-form-item label="单元">
+                        <el-input v-model="documentData.room_all_name"></el-input>
+                    </el-form-item>
+               </el-form>
+            </el-col>
+            <el-col :sm="24" :md="12">
+                <div class="print">
+                    <div class="word font-song font21 line18" ref="printbox">
+                        <PurchaseIntention-Template :documentData="documentData"></PurchaseIntention-Template>
+                        <!-- <br>
+                        <h2 class="text-center font24">关于购买凤岗天安数码城物业的意向书</h2>
+                        <br>
+                        <p>东莞市凤岗天安数码城有限公司：</p>
+                        <p class="text-indent">{{documentData.customer_name || ' <客户公司名称> '}}位于{{documentData.address || ' <客户公司地址> '}}，本公司主营业务为{{documentData.company_scope_of_operation || ' <公司主营业务> '}}，{{documentData.company_briefing || ' <公司简介> '}}</p>
+                        <p class="text-indent">我司因研发及经营业务需要，现申请入驻凤岗天安数码城项目，申请入驻意向面积{{documentData.built_area || ' <物业面积> '}}平米，意向{{documentData.room_all_name || ' <单元> '}}。</p>
+                        <p class="text-indent">特此函达。此致！</p>
+                        <br>
+                        <p class="text-right">{{documentData.customer_name || ' <客户公司名称> '}}</p>
+                        <p class="text-right">（盖　　章）</p>
+                        <p class="text-right">　　　　年　　月　　日</p> -->
+                    </div>
+                </div>
+                <el-button type="primary" @click="onPrint()">打印</el-button>
+            </el-col>
+        </el-row>
+    </div>
+</template>
+
+<script>
+import '@/assets/css/wordPrint.css'
+import Vue from 'vue'
+import Print from '@/plugs/print'
+import axios from 'axios'
+Vue.use(Print)
+Vue.component('PurchaseIntention-Template', function (resolve, reject) {
+    axios.get('/api/file_template/get_file_templatedetails_by_file_code?file_code=PurchaseIntention').then((result) => {
+        
+        // <span class="placeholder"></span>
+        let _html = result.data.data.template_html.replace(/{{/g, '{{documentData.').replace(/}}/g, ' || "______" }}')
+
+        console.log(_html)
+
+        resolve({
+            template: _html,
+            props: {
+                documentData: {
+                    type: Object
+                }
+            },
+            data() {
+                return {
+                }
+            },
+            methods: {
+            },
+            created() {
+            }
+        })
+    })
+})
+export default {
+    data () {
+        return {
+            // html: '<br><h2 class="text-center font24">关于购买凤岗天安数码城物业的意向书</h2><br><p>东莞市凤岗天安数码城有限公司：</p><p class="text-indent">{{customer_name}}位于{{address}}，本公司主营业务为{{company_scope_of_operation}}，{{company_briefing}}</p><p class="text-indent">我司因研发及经营业务需要，现申请入驻凤岗天安数码城项目，申请入驻意向面积{{built_area}}平米，意向{{room_all_name}}。</p><p class="text-indent">特此函达。此致！</p><br><p class="text-right">{{customer_name}}</p><p class="text-right">（盖　　章）</p><p class="text-right">　　　　年　　月　　日</p>',
+            documentData: {
+                customer_name: '', // 客户姓名
+                customer_id: '', // 客户ID
+                room_all_name: '',
+                project_id: '',
+                building_id: '',
+                floor_id: '',
+                room_id: '',
+                built_area: '', // 建筑面积
+                address: '', // 办公地址
+                company_scope_of_operation: '', // 经营范围
+                company_briefing: '' // 简介
+            }
+        }
+    },
+    created() {
+    },
+    watch: {
+    },
+    //Print,
+    methods: {
+        onPrint() {
+            this.$print(this.$refs.printbox)
+        }
+    }
+}
+
+</script>
+
+<style scoped>
+    /deep/ .placeholder {
+        display: inline-block;
+        width: 120px;
+        vertical-align: text-bottom;
+        border-bottom: 1px solid #000;
+    }
+</style>

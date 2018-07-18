@@ -1,0 +1,251 @@
+<template>
+    <div>
+        <el-form ref="flowForm" :rules="flowForm_rules" :model="flowForm" label-width="120px" size="small">
+            <el-form-item label="当前客户">
+                <p>{{flowObj.name}}</p>
+            </el-form-item>
+            <el-form-item label="适用销售流程" prop="flow_id">
+                <el-select v-model="flowForm.flow_id">
+                    <el-option label="测试值为1" value="1"></el-option>
+                </el-select>
+            </el-form-item>
+            <el-form-item label="客户主体类别" prop="customer_type">
+                <el-radio-group v-model="flowForm.customer_type">
+                    <el-radio :label="1">个人</el-radio>
+                    <el-radio :label="2">企业</el-radio>
+                </el-radio-group>
+            </el-form-item>
+            <div v-if="flowForm.customer_type == 1">
+                <el-form-item label="个人证件类型">
+                    <el-select v-model="flowForm.person_identification_type">
+                        <el-option v-for="item in identification_type" :key="item.value_id" :label="item.value_name" :value="String(item.value_id)">{{item.value_name}}</el-option>
+                    </el-select>
+                </el-form-item>
+                <el-form-item label="个人证件号码" prop="person_identification_number">
+                    <el-input v-model="flowForm.person_identification_number" placeholder="请输入"></el-input>
+                </el-form-item>
+            </div>
+            <div v-if="flowForm.customer_type == 2">
+                <el-form-item label="企业名称">
+                    <el-input v-model="flowForm.enterprise_name" placeholder="请输入"></el-input>
+                </el-form-item>
+                <el-form-item label="企业证件类型">
+                    <el-select v-model="flowForm.company_identification_type">
+                        <el-option v-for="item in company_card_type" :key="item.value_id" :label="item.value_name" :value="String(item.value_id)">{{item.value_name}}</el-option>
+                    </el-select>
+                </el-form-item>
+                <el-form-item label="企业证件号码">
+                    <el-input v-model="flowForm.company_identification_number" placeholder="请输入"></el-input>
+                </el-form-item>
+            </div>
+            <el-form-item>
+                <el-button type="primary" @click="submit()">提交</el-button>
+            </el-form-item>
+        </el-form>
+    </div>
+</template>
+
+<script>
+export default {
+    data () {
+        return {
+            rawform: {
+                person_identification_type: '', // 个人证件类型
+                person_identification_number: '', // 个人证件号码
+                enterprise_name: '', // 企业名称
+                company_identification_type: '', // 个人证件类型
+                company_identification_number: '', // 个人证件号码
+            },
+            identification_type: [], // 个人证件类别
+            company_card_type: [], // 企业证件类别
+
+            flowForm: {
+                flow_id: '1', // 适用流程
+                customer_type: 1, // 客户主体类别(1:个人2:企业)
+                person_identification_type: '', // 个人证件类型
+                person_identification_number: '', // 个人证件号码
+                enterprise_name: '', // 企业名称
+                company_identification_type: '', // 个人证件类型
+                company_identification_number: '', // 个人证件号码
+            },
+            flowForm_rules: {
+                flow_id: [
+                    { required: true, message: '请选择适用流程', trigger: 'change'}
+                ],
+                customer_type: [
+                    { required: true, message: '请选择客户类别', trigger: 'change'}
+                ]
+            }
+        }
+    },
+    props: {
+        flowObj: {
+            type: Object
+        }
+    },
+    created() {
+        let _this = this;
+        this.$https.all([
+            this.getDic('contact_card_type', 'identification_type'),
+            this.getDic('company_card_type', 'company_card_type')
+
+        ]).then(this.$https.spread(function (acct, perms) {
+            console.log(_this.flowObj)
+            if (_this.flowObj) { // 编辑
+                _this.getOldData();
+            }
+        }))
+    },
+    methods: {
+        getOldData() { // 获取编辑数据
+
+            this.$https.get('/api/Customer/get_customerdetails?c_id=' + this.flowObj.id).then((result) => {
+                if (result.data.code == 0) {
+                    let _data = result.data.data;
+
+                    this.flowForm.enterprise_name = _data.enterprise_name; // 
+                    this.flowForm.company_identification_type = _data.company_identification_type; // 
+                    this.flowForm.company_identification_number = _data.company_identification_number; // 
+                    this.flowForm.person_identification_type = _data.person_identification_type; // 
+                    this.flowForm.person_identification_number = _data.person_identification_number; // 
+                    this.rawform.enterprise_name = _data.enterprise_name; // 
+                    this.rawform.company_identification_type = _data.company_identification_type; // 
+                    this.rawform.company_identification_number = _data.company_identification_number; // 
+                    this.rawform.person_identification_type = _data.person_identification_type; // 
+                    this.rawform.person_identification_number = _data.person_identification_number; // 
+                } else {
+                    this.$message({
+                        type: 'error',
+                        showClose: true,
+                        message: result.data.message
+                    })
+                }
+            })
+        },
+        getDic(code, dic) { // 根据关键字获取字典值并保存 相应字段
+            this.$https.get('/api/Dicts/GetValues', {
+                params: {
+                    type_code: code
+                }
+            }).then((result) => {
+                if (result.data.code == 0) {
+                    this[dic] = result.data.data;
+                } else {
+                    this.$message({
+                        type: 'error',
+                        showClose: true,
+                        message: result.data.message
+                    })
+                }
+            })
+        },
+        closeDialog(name) { // 关闭当前
+            // this.$refs.form.resetFields(); // 重置表单
+            if (!name) {
+                this.$emit('closeDialog', 'dialogFlowCreate'); // 执行父组件关闭方法
+            } else {
+                this.$emit('closeDialog', name); // 执行父组件关闭方法
+            }
+        },
+        submit() { // 提交
+            this.$refs.flowForm.validate((valid) => {
+                if (valid) {
+                    let _postData = {
+                        flow_id: this.flowForm.flow_id,
+                    }
+                    _postData.customer_transaction_model = {
+                        c_id: this.flowObj.id,
+                        transaction_type: 2,// 交易类型(1:求租 0:求购 2:定制)
+                        transaction_status: 0,
+                        customer_type: this.flowForm.customer_type, // 客户主体类别(1:个人2:企业)
+                        person_identification_type: this.flowForm.person_identification_type, // 个人证件类型
+                        person_identification_number: this.flowForm.person_identification_number, // 个人证件号码
+                        enterprise_name: this.flowForm.enterprise_name, // 企业名称
+                        company_identification_type: this.flowForm.company_identification_type, // 个人证件类型
+                        company_identification_number: this.flowForm.company_identification_number, // 个人证件号码
+                    }
+                    if (_postData.customer_transaction_model.customer_type == 1) { // 个人
+                        if (_postData.customer_transaction_model.person_identification_type == '') {
+                            this.$message({
+                                type: 'error',
+                                showClose: true,
+                                message: '请选择个人证件类型'
+                            })
+                            return;
+                        }
+                        if (_postData.customer_transaction_model.person_identification_number == '') {
+                            this.$message({
+                                type: 'error',
+                                showClose: true,
+                                message: '请填写个人证件号码'
+                            })
+                            return;
+                        }
+                        _postData.customer_transaction_model.enterprise_name = this.rawform.enterprise_name;
+                        _postData.customer_transaction_model.company_identification_type = this.rawform.company_identification_type;
+                        _postData.customer_transaction_model.company_identification_number = this.rawform.company_identification_number;
+
+                    } else {
+                        if (_postData.customer_transaction_model.enterprise_name == '') {
+                            this.$message({
+                                type: 'error',
+                                showClose: true,
+                                message: '请填写企业名称'
+                            })
+                            return;
+                        }
+                        if (_postData.customer_transaction_model.company_identification_type == '') {
+                            this.$message({
+                                type: 'error',
+                                showClose: true,
+                                message: '请选择企业证件类型'
+                            })
+                            return;
+                        }
+                        if (_postData.customer_transaction_model.company_identification_number == '') {
+                            this.$message({
+                                type: 'error',
+                                showClose: true,
+                                message: '请填写企业证件号码'
+                            })
+                            return;
+                        }
+                        _postData.customer_transaction_model.person_identification_type = this.rawform.person_identification_type;
+                        _postData.customer_transaction_model.person_identification_number = this.rawform.person_identification_number;
+                    }
+                    
+                    this.$https.post('/api/flow_buyinghouse/create_flow_buyinghouse', _postData).then((result) => {
+                        if (result.data.code == 0) {
+                            this.$message({
+                                type: 'success',
+                                showClose: true,
+                                message: '已为该客户成功创建销售流程',
+                                duration: 1500,
+                                onClose: () => {
+                                    // 关闭当前dialog
+                                    this.closeDialog();
+                                    // 刷新列表
+                                    this.$emit('parentGetDataList');
+                                }
+                            })
+                        } else {
+                            this.$message({
+                                type: 'error',
+                                showClose: true,
+                                message: result.data.message
+                            })
+                        }
+                    })
+                    
+
+                } else {
+                    console.error('验证失败');
+                    return false;
+                }
+            });
+        }
+    }
+}
+</script>
+<style scoped>
+</style>

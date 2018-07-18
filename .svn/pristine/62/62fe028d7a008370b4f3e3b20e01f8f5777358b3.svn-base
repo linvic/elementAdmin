@@ -1,0 +1,176 @@
+<template>
+    <div>
+
+        <el-card>
+            <div slot="header" class="clearfix">
+                <span>历史文档记录</span>
+                <el-button-group style="float: right;">
+                    <el-button icon="el-icon-refresh" size="small" plain onclick="window.location.reload()">刷新</el-button>
+                    <el-button type="primary" icon="el-icon-circle-plus-outline" size="small" @click="dialogTemplateAdd = true">新增</el-button>
+                </el-button-group>
+            </div>
+            
+            <el-table :data="tableData" style="width: 100%" v-loading="loading">
+                <el-table-column prop="fc_id" label="ID" width="80"></el-table-column>
+                <el-table-column prop="file_name" label="文档名称"></el-table-column>
+
+                <el-table-column label="关联客户">
+                    <template slot-scope="scope">
+                        <a href="javascript:;" @click="openDetails(scope.row.c_id)">{{scope.row.customer_name}}</a>
+                    </template>
+                </el-table-column>
+                <el-table-column prop="created_time" label="创建时间"></el-table-column>
+                <el-table-column label="操作" width="250">
+                    <template slot-scope="scope">
+                        <el-button
+                            size="mini"
+                            type="primary"
+                            plain
+                            @click="listFrameEdit(scope.row.fc_id, scope.row.file_template_id, scope.row.file_name, scope.row.file_type_code)">编辑</el-button>
+                        <el-button
+                            size="mini"
+                            type="success"
+                            plain
+                            @click="listFrame(scope.row.file_template_id, scope.row.file_name, scope.row.file_type_code)">创建</el-button>
+                        <el-button
+                            size="mini"
+                            type="success"
+                            plain
+                            @click="listFramePrint(scope.row.fc_id, scope.row.file_template_id, scope.row.file_name, scope.row.file_type_code)">打印</el-button>
+                    </template>
+                </el-table-column>
+            </el-table>
+            <div class="text-center m-t">
+                <el-pagination
+                    v-if="dataTotal > 10"
+                    @size-change="pageSizeChange"
+                    @current-change="pageIndexChange"
+                    :current-page="pageIndex"
+                    :page-sizes="[10, 15, 20, 30]"
+                    :page-size="pageSize"
+                    layout="total, sizes, prev, pager, next, jumper"
+                    :total="dataTotal">
+                </el-pagination>
+            </div>
+        </el-card>
+
+        <el-dialog v-if="dialogFrame" title="创建文档" :visible.sync="dialogFrame" append-to-body fullscreen>
+            <Frame @closeDialog="closeDialog" @parentGetDataList="getDataList" :frameParame="FrameParame"></Frame>
+        </el-dialog>
+        <el-dialog v-if="dialogFrameEdit" title="编辑文档" :visible.sync="dialogFrameEdit" append-to-body fullscreen>
+            <Frame @closeDialog="closeDialog" @parentGetDataList="getDataList" :frameParame="FrameParame" :editId="editId"></Frame>
+        </el-dialog>
+        <el-dialog v-if="dialogFramePrint" title="打印文档" :visible.sync="dialogFramePrint" append-to-body width="800px">
+            <Frame @closeDialog="closeDialog" @parentGetDataList="getDataList" :frameParame="FrameParame" :editId="editId"></Frame>
+        </el-dialog>
+
+        <el-dialog v-if="dialogDetails" title="客户详情" :visible.sync="dialogDetails" append-to-body width="1000px">
+            <Details @closeDialog="closeDialog" :id="editUserId"></Details>
+        </el-dialog>
+    </div>
+</template>
+
+<script>
+import Frame from './../Frame'
+import Details from '@/pages/CRM/Details'
+export default {
+    components: {
+        Frame,
+        Details
+    },
+    data () {
+        return {
+            editId: null, // 文件id
+            editUserId: null, // 用户ID
+            loading: false,
+            FrameParame: null, // 使用模板参数
+            tableData: [],
+            dialogFrame: false, // 使用模板
+            dialogFrameEdit: false, // 编辑文档
+            dialogFramePrint: false, // 打印文档
+            dialogDetails: false, // 客户详情
+            pageIndex: 1, // 当前页码
+            pageSize: 10, // 页码大小
+            dataTotal: 0 // 数据总数,
+        }
+    },
+    created() {
+        this.getDataList();
+    },
+    watch: {
+    },
+    methods: {
+        openDetails(id) { // 客户详情
+            this.editUserId = Number(id);
+            this.dialogDetails = true;
+        },
+        // 获取分页
+        getDataList() {
+            this.loading = true;
+            this.$https.get('/api/file_common/page', {
+                params: {
+                    currentPage: this.pageIndex,
+                    pageSize: this.pageSize
+                }
+            }).then((result) => {
+                this.loading = false;
+                if (result.data.code == 0) {
+                    this.tableData = result.data.data.Items;
+                    this.dataTotal = result.data.data.Total;
+                } else {
+                    this.$message({
+                        type: 'error',
+                        showClose: true,
+                        message: result.data.message
+                    })
+                }
+            })
+        },
+        closeDialog(name) {
+            this[name] = false;
+        },
+        listFrame(id, name, code) { // 编辑
+            this.FrameParame = {
+                id: Number(id),
+                name: name,
+                code: code
+            };
+            this.dialogFrame = true;
+        },
+        listFrameEdit(fc_id, id, name, code) { // 编辑
+            this.FrameParame = {
+                id: Number(id),
+                name: name,
+                code: code
+            };
+            this.editId = Number(fc_id);
+            this.dialogFrameEdit = true;
+        },
+        listFramePrint(fc_id, id, name, code) { // 打印文档
+            this.FrameParame = {
+                id: Number(id),
+                name: name,
+                code: code,
+                type: 'print' // 打印
+            };
+            this.editId = Number(fc_id);
+            this.dialogFramePrint = true;
+        },
+
+        pageSizeChange(val) { // 分页：pageSize改变时
+            this.pageSize = val;
+            this.getDataList();
+        },
+        pageIndexChange(val) { // 分页：当前页码改变时
+            this.pageIndex = val;
+            this.getDataList();
+        }
+    }
+}
+</script>
+
+<style scoped>
+    .dicMain {
+        padding: 0px 0px 20px 20px;
+    }
+</style>
