@@ -40,10 +40,6 @@
                     <div v-if="step === 1">
                         <!-- 2了解客户 -->
                         <el-form ref="form2" :rules="form2_rules" :model="form2" label-width="120px" :disabled="flowStep !== 2" :label-suffix="flowStep !== 2 ? '：' : ''">
-
-                            <el-form-item label=" ">
-                                <el-button type="text" @click="chanceEdit(c_id)">完善客户资料</el-button>
-                            </el-form-item>
                             <el-form-item label="诚意金金额" prop="customer_information_status">
                                 <el-radio-group v-model="form2.customer_information_status">
                                     <el-radio label="0">未完善</el-radio>
@@ -258,7 +254,7 @@
                                         <th>面积（平方米）</th>
                                         <th>折扣（元/平米）</th>
                                         <th>成交价格（元）</th>
-                                        <th>房款（元）</th>
+                                        <th>房款</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -269,9 +265,7 @@
                                         <td>
                                             {{item.discount_type === 1 ? item.discount_percent + '%' : item.discount_cash + '元'}}
                                         <td>{{item.real_total_price}}</td>
-                                        <td>
-                                        <el-input v-model="itemTotalPrice[index]" @keyup.native="onkeyupPrice($event)" :minlength="1" size="mini" style="width:100px;" :disabled="flowStep !== 6">
-                                        </el-input></td>
+                                        <td>{{itemTotalPrice[index]}}</td>
                                     </tr>
                                 </tbody>
                                 <tfoot>
@@ -281,9 +275,7 @@
                                         <td>{{buyinghouseRoomList_total_area}}</td>
                                         <td>-</td>
                                         <td>{{buyinghouseRoomList_total_price}}</td>
-                                        <td>
-                                        <el-input v-model="form6.total_price" @keyup.native="onkeyupPrice($event)" :minlength="1" size="mini" style="width:100px;" :disabled="flowStep !== 6">
-                                        </el-input></td>
+                                        <td>{{form6.total_price}}</td>
                                     </tr>
                                 </tfoot>
                             </table>
@@ -347,22 +339,6 @@
                                     <el-col :span="12">
                                         <el-form-item label="按揭二期付款日期" prop="mortgage_second_pay_date">
                                             <el-date-picker v-model="form6.mortgage_second_pay_date" type="date" placeholder="选择日期" :editable="false" style="width: 200px"></el-date-picker>
-                                        </el-form-item>
-                                    </el-col>
-                                </el-row>
-                                <el-row>
-                                    <el-col :span="12">
-                                        <el-form-item label="按揭首期付款额度" prop="mortgage_first_pay_amount">
-                                            <el-input v-model="form6.mortgage_first_pay_amount" @keyup.native="onkeyupPrice($event)" placeholder="数字，小数点两位" style="width: 200px">
-                                                <template slot="append">元</template>
-                                            </el-input>
-                                        </el-form-item>
-                                    </el-col>
-                                    <el-col :span="12">
-                                        <el-form-item label="按揭二期付款额度" prop="mortgage_second_pay_amount">
-                                            <el-input v-model="form6.mortgage_second_pay_amount" @keyup.native="onkeyupPrice($event)" placeholder="数字，小数点两位" style="width: 200px">
-                                                <template slot="append">元</template>
-                                            </el-input>
                                         </el-form-item>
                                     </el-col>
                                 </el-row>
@@ -454,18 +430,11 @@
             </el-row>
             
         </el-card>
-        <el-dialog v-if="dialogChanceEdit" title="编辑机会客户" :visible.sync="dialogChanceEdit" append-to-body width="1000px">
-            <ChanceEdit @closeDialog="closePageDialog"  @parentGetDataList="chanceEditCallback" :id="c_id"></ChanceEdit>
-        </el-dialog>
     </div>
 </template>
 
 <script>
-import ChanceEdit from '@/pages/CRM/Chance/ChanceEdit'
 export default {
-    components: {
-        ChanceEdit
-    },
     data () {
         return {
             step: 0, // setp 0 （ 步骤一 form1）当前显示的步骤
@@ -499,7 +468,6 @@ export default {
                     { required: true, message: '请选择客户购房意图', trigger: 'change'}
                 ]
             },
-            dialogChanceEdit: false, // 编辑客户
             isChief: false, // 是否是总监
             form3: {
                 open_name: '',
@@ -653,28 +621,7 @@ export default {
         },
         buyinghouseRoomList: { // 第四步
             handler(newVal, oldVal) {
-                if(this.buyinghouseRoomList.length > 0){
-
-                    for(let item of this.buyinghouseRoomList) {
-
-                        let _originalUnitPrice = item.original_unit_price; // 单价
-                        let _Area = item.built_area; // 面积
-                        let _originalTotalPrice = (parseFloat(_originalUnitPrice) * parseFloat(_Area)).toFixed(2); // 原价
-                        let _realTotalPrice = 0; // 总价
-
-                        if (item.discount_type === 1) { // 按百分比
-                            _realTotalPrice = parseFloat(_originalTotalPrice - _originalTotalPrice * (item.discount_percent * 0.01)).toFixed(2);
-                        } else { // 现金折扣
-                            let _cashPrice = parseFloat(_originalUnitPrice - item.discount_cash).toFixed(2); // 打折后的单价
-                            _realTotalPrice = (parseFloat(_cashPrice) * parseFloat(_Area)).toFixed(2);
-                            // 计算总价
-                        }
-
-                        item.original_total_price = _originalTotalPrice; // 赋值原价
-                        item.real_total_price = _realTotalPrice; // 赋值总价
-                    }
-
-                }
+                this.buyinghouseRoomList_init();
             },
             deep: true
         },
@@ -682,6 +629,7 @@ export default {
             let _servicePrice = parseFloat(val * this.buyinghouseRoomList_total_area);
             this.form6.service_price_count = _servicePrice;
             this.form6.service_price_real_count = _servicePrice;
+
         },
         itemTotalPrice: { // 第6步：计算总房款
             handler(newVal, oldVal) {
@@ -690,7 +638,7 @@ export default {
 
                     _total_price += parseFloat(item);
                 }
-                this.form6.total_price = parseFloat(_total_price.toFixed(2));
+                this.form6.total_price = _total_price;
             },
             deep: true
         },
@@ -698,13 +646,7 @@ export default {
             let _depositPrice = parseFloat(val * this.buyinghouseRoomList_total_area);
             this.form6.deposit_price_count = _depositPrice;
             this.form6.deposit_price_real_count = _depositPrice;
-        },
-        'form6.mortgage_percent': function(val) { // 第6步：监听按揭
-            this.form6.mortgage_second_pay_amount = parseFloat((this.form6.total_price * this.form6.mortgage_percent * 0.1).toFixed(2)); // 按揭二期付款额度
-            this.form6.mortgage_first_pay_amount = parseFloat((this.form6.total_price - this.form6.mortgage_second_pay_amount).toFixed(2)); // 按揭首期付款额度
         }
-
-                                
     },
     computed:{
         buyinghouseRoomList_total_area: function() { // 总面积
@@ -763,15 +705,6 @@ export default {
                 }
             })
         },
-        closePageDialog(name) { // 关闭弹层
-            this[name] = false;
-        },
-        chanceEdit() { // 修改客户信息
-            this.dialogChanceEdit = true;
-        },
-        chanceEditCallback() {
-            console.log('aaaaa')
-        },
         getDeatils() { // 获取流程详情
             this.$https.get('/api/flow_buyinghouse/get_flow_buyinghouse_details?f_id=' + this.f_id + '&c_id=' + this.c_id).then((result) => {
                 if (result.data.code == 0) {
@@ -780,7 +713,7 @@ export default {
                     this.step = Number(_data.current_step) - 1; // 当前步骤
                     this.instance_step = _data.instance_step.split(',');// 配置步骤  如 1,2,3,4,5,6,7,8,9
                     this.flow_status = Number(_data.flow_status); // 流程状态 0:进行中 1:成功后终止 2:失败后终止
-                    if(this.flow_status === 1) this.step = 8;
+
                     if (this.flow_status === 1 || _data.current_step > 1) { // 第一步详情
                         this.form1.earnest_money_amount = _data.earnest_money_amount.toString();
                         this.form1.earnest_money_pay_time = _data.earnest_money_pay_time.toString();
@@ -1138,27 +1071,11 @@ export default {
                                     })
                                     return;
                                 }
-                                if (!_postData.mortgage_first_pay_amount) {
-                                    this.$message({
-                                        type: 'error',
-                                        showClose: true,
-                                        message: '按揭首期付款额度不能为空'
-                                    })
-                                    return;
-                                }
-                                if (!_postData.mortgage_second_pay_amount) {
-                                    this.$message({
-                                        type: 'error',
-                                        showClose: true,
-                                        message: '按揭二期付款额度不能为空'
-                                    })
-                                    return;
-                                }
 
                                 _postData.mortgage_percent = parseInt(_postData.mortgage_percent); // 按揭成数
 
-                                // _postData.mortgage_second_pay_amount = parseFloat(_postData.total_price * _postData.mortgage_percent * 0.1); // 按揭二期付款额度
-                                // _postData.mortgage_first_pay_amount = _postData.total_price - _postData.mortgage_second_pay_amount; // 按揭首期付款额度
+                                _postData.mortgage_second_pay_amount = parseFloat(_postData.total_price * _postData.mortgage_percent * 0.1); // 按揭二期付款额度
+                                _postData.mortgage_first_pay_amount = _postData.total_price - _postData.mortgage_second_pay_amount; // 按揭首期付款额度
 
                             } else { //一次性
                                 if (!_postData.one_payment_amount) {
@@ -1616,6 +1533,31 @@ export default {
                 }
                 item.active = !item.active;
             }
+        },
+        buyinghouseRoomList_init() {
+            if(this.buyinghouseRoomList.length > 0){
+
+                for(let item of this.buyinghouseRoomList) {
+
+                    let _originalUnitPrice = item.original_unit_price; // 单价
+                    let _Area = item.built_area; // 面积
+                    let _originalTotalPrice = (parseFloat(_originalUnitPrice) * parseFloat(_Area)).toFixed(2); // 原价
+                    let _realTotalPrice = 0; // 总价
+
+                    if (item.discount_type === 1) { // 按百分比
+                        _realTotalPrice = parseFloat(_originalTotalPrice - _originalTotalPrice * (item.discount_percent * 0.01)).toFixed(2);
+                    } else { // 现金折扣
+                        let _cashPrice = parseFloat(_originalUnitPrice - item.discount_cash).toFixed(2); // 打折后的单价
+                        _realTotalPrice = (parseFloat(_cashPrice) * parseFloat(_Area)).toFixed(2);
+                        // 计算总价
+                    }
+
+                    item.original_total_price = _originalTotalPrice; // 赋值原价
+                    item.real_total_price = _realTotalPrice; // 赋值总价
+                }
+
+            }
+            
         }
     },
     filters: {

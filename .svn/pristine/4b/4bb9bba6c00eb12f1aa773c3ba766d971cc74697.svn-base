@@ -40,10 +40,6 @@
                     <div v-if="step === 1">
                         <!-- 2了解客户 -->
                         <el-form ref="form2" :rules="form2_rules" :model="form2" label-width="120px" :disabled="flowStep !== 2" :label-suffix="flowStep !== 2 ? '：' : ''">
-
-                            <el-form-item label=" ">
-                                <el-button type="text" @click="chanceEdit(c_id)">完善客户资料</el-button>
-                            </el-form-item>
                             <el-form-item label="诚意金金额" prop="customer_information_status">
                                 <el-radio-group v-model="form2.customer_information_status">
                                     <el-radio label="0">未完善</el-radio>
@@ -154,7 +150,7 @@
                                     <th>物业</th>
                                     <th>原单价（元/平方米）</th>
                                     <th>面积（平方米）</th>
-                                    <th width="200">折扣</th>
+                                    <th width="180">折扣</th>
                                     <th>价格（元）</th>
                                 </tr>
                             </thead>
@@ -164,14 +160,14 @@
                                     <td>{{item.original_unit_price}}</td>
                                     <td>{{item.built_area}}</td>
                                     <td>
-                                        <el-select v-model="item.discount_type" placeholder="请选择活折扣方式" size="mini" style="width:200px;margin-bottom:5px;" :disabled="flowStep !== 4">
+                                        <el-select v-model="item.discount_type" placeholder="请选择活折扣方式" size="mini" style="width:150px;margin-bottom:5px;">
                                             <el-option label="百分比折扣" :value="1"></el-option>
                                             <el-option label="现金折扣" :value="2"></el-option>
                                         </el-select>
-                                        <el-input v-if="item.discount_type === 1" v-model="item.discount_percent" @keyup.native="onkeyupPlusInt($event)" :minlength="1" placeholder="0-100" size="mini" style="width:200px;" :disabled="flowStep !== 4">
+                                        <el-input v-if="item.discount_type === 1" v-model="item.discount_percent" @keyup.native="onkeyupPlusInt($event)" placeholder="百分比折扣,整数" size="mini" style="width:150px;">
                                             <template slot="append">%</template>
                                         </el-input>
-                                        <el-input v-if="item.discount_type === 2" v-model="item.discount_cash" @keyup.native="onkeyupPrice($event)" :minlength="1" placeholder="现金折扣"  size="mini" style="width:200px;" :disabled="flowStep !== 4">
+                                        <el-input v-if="item.discount_type === 2" v-model="item.discount_cash" @keyup.native="onkeyupPrice($event)" placeholder="现金折扣"  size="mini" style="width:150px;">
                                             <template slot="prepend">减</template><template slot="append">元</template>
                                         </el-input>
                                     <td>{{item.real_total_price}}</td>
@@ -181,15 +177,12 @@
                                 <tr>
                                     <th>合计</th>
                                     <td>-</td>
-                                    <td>{{buyinghouseRoomList_total_area}}</td>
+                                    <td>面积1+面积2</td>
                                     <td>-</td>
-                                    <td>{{buyinghouseRoomList_total_price}}</td>
+                                    <td>价格1+价格2</td>
                                 </tr>
                             </tfoot>
                         </table>
-                        <div class="text-center m-t" v-if="flowStep === 4">
-                            <el-button type="primary" @click="submit(4)">提交</el-button>
-                        </div>
                     </div>
                     <div v-if="step === 4">
                         <!-- 5预售准备 -->
@@ -258,51 +251,73 @@
                                         <th>面积（平方米）</th>
                                         <th>折扣（元/平米）</th>
                                         <th>成交价格（元）</th>
-                                        <th>房款（元）</th>
+                                        <th>房款</th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <tr v-for="item,index in buyinghouseRoomList">
-                                        <td>{{item.room_all_name}}</td>
-                                        <td>{{item.original_unit_price}}</td>
-                                        <td>{{item.built_area}}</td>
-                                        <td>
-                                            {{item.discount_type === 1 ? item.discount_percent + '%' : item.discount_cash + '元'}}
-                                        <td>{{item.real_total_price}}</td>
-                                        <td>
-                                        <el-input v-model="itemTotalPrice[index]" @keyup.native="onkeyupPrice($event)" :minlength="1" size="mini" style="width:100px;" :disabled="flowStep !== 6">
-                                        </el-input></td>
+                                    <tr>
+                                        <td>【N6】号厂房【10】层【1002】单元</td>
+                                        <td>8000</td>
+                                        <td>355</td>
+                                        <td>1%</td>
+                                        <td>价格1=折后单价*面积1</td>
+                                        <td>（折后单价-服务费单价）*面积1</td>
+                                    </tr>
+                                    <tr>
+                                        <td>【N6】号厂房【10】层【1003】单元</td>
+                                        <td>8000</td>
+                                        <td>366</td>
+                                        <td>100</td>
+                                        <td>价格1=折后单价*面积2</td>
+                                        <td>（折后单价-服务费单价）*面积2</td>
                                     </tr>
                                 </tbody>
                                 <tfoot>
                                     <tr>
                                         <th>合计</th>
                                         <td>-</td>
-                                        <td>{{buyinghouseRoomList_total_area}}</td>
+                                        <td>面积1+面积2</td>
                                         <td>-</td>
-                                        <td>{{buyinghouseRoomList_total_price}}</td>
-                                        <td>
-                                        <el-input v-model="form6.total_price" @keyup.native="onkeyupPrice($event)" :minlength="1" size="mini" style="width:100px;" :disabled="flowStep !== 6">
-                                        </el-input></td>
+                                        <td>价格1+价格2</td>
+                                        <td>房款1+房款2</td>
                                     </tr>
                                 </tfoot>
                             </table>
                             <el-row>
                                 <el-col :span="12">
-                                    <el-form-item label="服务费总计" prop="service_price_real_count">
-                                        <el-input v-model="form6.service_price_real_count" @keyup.native="onkeyupPrice($event)" placeholder="数字，小数点两位" style="width: 200px">
+                                    <el-form-item label="服务费总计" prop="service_price_count">
+                                        <el-input v-model="form6.service_price_count" @keyup.native="onkeyupPrice($event)" placeholder="数字，小数点两位" style="width: 200px">
                                             <template slot="append">元</template>
                                         </el-input>
                                     </el-form-item>
                                 </el-col>
                                 <el-col :span="12">
-                                    <el-form-item label="保证金总计" prop="deposit_price_real_count">
-                                        <el-input v-model="form6.deposit_price_real_count" @keyup.native="onkeyupPrice($event)" placeholder="数字，小数点两位" style="width: 200px">
+                                    <el-form-item label="保证金总计" prop="deposit_price_count">
+                                        <el-input v-model="form6.deposit_price_count" @keyup.native="onkeyupPrice($event)" placeholder="数字，小数点两位" style="width: 200px">
                                             <template slot="append">元</template>
                                         </el-input>
                                     </el-form-item>
                                 </el-col>
                             </el-row>
+
+                        <!-- total_price: '', // F_房款总价(元)
+                            service_price: '', // F_服务费单价(元/平方)
+                            service_price_count: '', // F_服务费总计_自动计算(元)
+                        service_price_real_count: '', // F_服务费总计_实际发生额(元)
+                            deposit_price: '', // F_保证金单价(元/平方)
+                            deposit_price_count: '', // F_保证金总计_自动计算(元)
+                        deposit_price_real_count: '', // F_保证金总计_实际发生额(元)
+                        real_transaction_price: '', // F_成交总价(元)
+                            pay_status: '', // F_付款方式(0:按揭 1:一次性)
+                            first_pay_amount: '', // F_首款含定金金额(元)
+                            mortgage_bank: '', // F_按揭银行
+                            mortgage_percent: '', // F_按揭成数
+                        mortgage_first_pay_amount: '', // F_按揭首期付款金额(元)
+                            mortgage_first_pay_date: '', // F_按揭首期付款日期
+                        mortgage_second_pay_amount: '', // F_按揭二期付款金额(元)
+                            mortgage_second_pay_date: '', // F_按揭二期付款日期
+                            one_payment_amount: '', // F_一次性付款金额(元)
+                            one_payment_date: '', // F_一次性付款日期 -->
                             <el-row>
                                 <el-col :span="24">
                                     <el-form-item label="房款总首付(含定金)" prop="first_pay_amount">
@@ -347,22 +362,6 @@
                                     <el-col :span="12">
                                         <el-form-item label="按揭二期付款日期" prop="mortgage_second_pay_date">
                                             <el-date-picker v-model="form6.mortgage_second_pay_date" type="date" placeholder="选择日期" :editable="false" style="width: 200px"></el-date-picker>
-                                        </el-form-item>
-                                    </el-col>
-                                </el-row>
-                                <el-row>
-                                    <el-col :span="12">
-                                        <el-form-item label="按揭首期付款额度" prop="mortgage_first_pay_amount">
-                                            <el-input v-model="form6.mortgage_first_pay_amount" @keyup.native="onkeyupPrice($event)" placeholder="数字，小数点两位" style="width: 200px">
-                                                <template slot="append">元</template>
-                                            </el-input>
-                                        </el-form-item>
-                                    </el-col>
-                                    <el-col :span="12">
-                                        <el-form-item label="按揭二期付款额度" prop="mortgage_second_pay_amount">
-                                            <el-input v-model="form6.mortgage_second_pay_amount" @keyup.native="onkeyupPrice($event)" placeholder="数字，小数点两位" style="width: 200px">
-                                                <template slot="append">元</template>
-                                            </el-input>
                                         </el-form-item>
                                     </el-col>
                                 </el-row>
@@ -454,18 +453,11 @@
             </el-row>
             
         </el-card>
-        <el-dialog v-if="dialogChanceEdit" title="编辑机会客户" :visible.sync="dialogChanceEdit" append-to-body width="1000px">
-            <ChanceEdit @closeDialog="closePageDialog"  @parentGetDataList="chanceEditCallback" :id="c_id"></ChanceEdit>
-        </el-dialog>
     </div>
 </template>
 
 <script>
-import ChanceEdit from '@/pages/CRM/Chance/ChanceEdit'
 export default {
-    components: {
-        ChanceEdit
-    },
     data () {
         return {
             step: 0, // setp 0 （ 步骤一 form1）当前显示的步骤
@@ -499,7 +491,6 @@ export default {
                     { required: true, message: '请选择客户购房意图', trigger: 'change'}
                 ]
             },
-            dialogChanceEdit: false, // 编辑客户
             isChief: false, // 是否是总监
             form3: {
                 open_name: '',
@@ -555,35 +546,38 @@ export default {
                 ]
             },
             form6: {
-                total_price: 0, // F_房款总价(元)
-                service_price: null, // F_服务费单价(元/平方)
-                service_price_count: 0, // F_服务费总计_自动计算(元)
-                service_price_real_count: 0, // F_服务费总计_实际发生额(元)
-                deposit_price: 0, // F_保证金单价(元/平方)
-                deposit_price_count: 0, // F_保证金总计_自动计算(元)
-                deposit_price_real_count: 0, // F_保证金总计_实际发生额(元)
+                total_price: '', // F_房款总价(元)
+                service_price: '', // F_服务费单价(元/平方)
+                service_price_count: '', // F_服务费总计_自动计算(元)
+                service_price_real_count: '', // F_服务费总计_实际发生额(元)
+                deposit_price: '', // F_保证金单价(元/平方)
+                deposit_price_count: '', // F_保证金总计_自动计算(元)
+                deposit_price_real_count: '', // F_保证金总计_实际发生额(元)
                 real_transaction_price: '', // F_成交总价(元)
                 pay_status: '0', // F_付款方式(0:按揭 1:一次性)
                 first_pay_amount: '', // F_首款含定金金额(元)
                 mortgage_bank: '', // F_按揭银行
                 mortgage_percent: '', // F_按揭成数
-                mortgage_first_pay_amount: 0, // F_按揭首期付款金额(元)
+                mortgage_first_pay_amount: '', // F_按揭首期付款金额(元)
                 mortgage_first_pay_date: '', // F_按揭首期付款日期
-                mortgage_second_pay_amount: 0, // F_按揭二期付款金额(元)
+                mortgage_second_pay_amount: '', // F_按揭二期付款金额(元)
                 mortgage_second_pay_date: '', // F_按揭二期付款日期
                 one_payment_amount: '', // F_一次性付款金额(元)
                 one_payment_date: '', // F_一次性付款日期
             },
             banks: [], // 银行数组
             form6_rules: {
+                total_price: [
+                    { required: true, message: '请选择', trigger: 'change'}
+                ],
                 service_price: [
-                    { required: true, message: '请填写服务费', trigger: 'blur'}
+                    { required: true, message: '请选择', trigger: 'change'}
                 ]
             },
             form7: {
-                is_sign_contract: '0', // G_是否已完成签约
+                is_sign_contract: '', // G_是否已完成签约
                 sign_contract_time: '', // G_签约时间
-                is_get_loan: '0' // G_放款情况(0:未放款 1:已放款)
+                is_get_loan: '' // G_放款情况(0:未放款 1:已放款)
             },
             form7_rules: {
                 is_sign_contract: [
@@ -651,83 +645,11 @@ export default {
                 this.form5.enter_park_doc_remark = '';
             }
         },
-        buyinghouseRoomList: { // 第四步
+        buyinghouseRoomList: {
             handler(newVal, oldVal) {
-                if(this.buyinghouseRoomList.length > 0){
-
-                    for(let item of this.buyinghouseRoomList) {
-
-                        let _originalUnitPrice = item.original_unit_price; // 单价
-                        let _Area = item.built_area; // 面积
-                        let _originalTotalPrice = (parseFloat(_originalUnitPrice) * parseFloat(_Area)).toFixed(2); // 原价
-                        let _realTotalPrice = 0; // 总价
-
-                        if (item.discount_type === 1) { // 按百分比
-                            _realTotalPrice = parseFloat(_originalTotalPrice - _originalTotalPrice * (item.discount_percent * 0.01)).toFixed(2);
-                        } else { // 现金折扣
-                            let _cashPrice = parseFloat(_originalUnitPrice - item.discount_cash).toFixed(2); // 打折后的单价
-                            _realTotalPrice = (parseFloat(_cashPrice) * parseFloat(_Area)).toFixed(2);
-                            // 计算总价
-                        }
-
-                        item.original_total_price = _originalTotalPrice; // 赋值原价
-                        item.real_total_price = _realTotalPrice; // 赋值总价
-                    }
-
-                }
+                this.buyinghouseRoomList_init();
             },
             deep: true
-        },
-        'form6.service_price': function(val) {// 第6步：监听服务费单价
-            let _servicePrice = parseFloat(val * this.buyinghouseRoomList_total_area);
-            this.form6.service_price_count = _servicePrice;
-            this.form6.service_price_real_count = _servicePrice;
-        },
-        itemTotalPrice: { // 第6步：计算总房款
-            handler(newVal, oldVal) {
-                let _total_price = 0;
-                for(let item of this.itemTotalPrice) {
-
-                    _total_price += parseFloat(item);
-                }
-                this.form6.total_price = parseFloat(_total_price.toFixed(2));
-            },
-            deep: true
-        },
-        'form6.deposit_price': function(val) { // 第6步：监听保证金
-            let _depositPrice = parseFloat(val * this.buyinghouseRoomList_total_area);
-            this.form6.deposit_price_count = _depositPrice;
-            this.form6.deposit_price_real_count = _depositPrice;
-        },
-        'form6.mortgage_percent': function(val) { // 第6步：监听按揭
-            this.form6.mortgage_second_pay_amount = parseFloat((this.form6.total_price * this.form6.mortgage_percent * 0.1).toFixed(2)); // 按揭二期付款额度
-            this.form6.mortgage_first_pay_amount = parseFloat((this.form6.total_price - this.form6.mortgage_second_pay_amount).toFixed(2)); // 按揭首期付款额度
-        }
-
-                                
-    },
-    computed:{
-        buyinghouseRoomList_total_area: function() { // 总面积
-            let _area = 0;
-            for(let item of this.buyinghouseRoomList) {
-                _area += parseFloat(item.built_area);
-            }
-            return _area.toFixed(2)
-        },
-        buyinghouseRoomList_total_price: function() { // 总成交价
-            let _price = 0;
-            for(let item of this.buyinghouseRoomList) {
-                _price += parseFloat(item.real_total_price);
-            }
-            return _price.toFixed(2)
-        },
-        itemTotalPrice: function() { // 房款
-            let _arr = [];
-            for(let item of this.buyinghouseRoomList) {
-                let _price =  parseFloat(item.real_total_price) - (item.built_area * this.form6.service_price)
-                _arr.push( _price.toFixed(2) );
-            }
-            return _arr
         }
     },
     methods: {
@@ -763,15 +685,6 @@ export default {
                 }
             })
         },
-        closePageDialog(name) { // 关闭弹层
-            this[name] = false;
-        },
-        chanceEdit() { // 修改客户信息
-            this.dialogChanceEdit = true;
-        },
-        chanceEditCallback() {
-            console.log('aaaaa')
-        },
         getDeatils() { // 获取流程详情
             this.$https.get('/api/flow_buyinghouse/get_flow_buyinghouse_details?f_id=' + this.f_id + '&c_id=' + this.c_id).then((result) => {
                 if (result.data.code == 0) {
@@ -780,17 +693,17 @@ export default {
                     this.step = Number(_data.current_step) - 1; // 当前步骤
                     this.instance_step = _data.instance_step.split(',');// 配置步骤  如 1,2,3,4,5,6,7,8,9
                     this.flow_status = Number(_data.flow_status); // 流程状态 0:进行中 1:成功后终止 2:失败后终止
-                    if(this.flow_status === 1) this.step = 8;
-                    if (this.flow_status === 1 || _data.current_step > 1) { // 第一步详情
+
+                    if (_data.current_step > 1) { // 第一步详情
                         this.form1.earnest_money_amount = _data.earnest_money_amount.toString();
                         this.form1.earnest_money_pay_time = _data.earnest_money_pay_time.toString();
                         this.form1.earnest_money_remark = _data.earnest_money_remark.toString();
                     }
-                    if (this.flow_status === 1 || _data.current_step > 2) { // 第二步详情
+                    if (_data.current_step > 2) { // 第二步详情
                         this.form2.customer_information_status = _data.customer_information_status.toString();
                         this.form2.custome_intention = _data.custome_intention.toString();
                     }
-                    if (this.flow_status === 1 || _data.current_step > 3) { // 第三步详情
+                    if (_data.current_step > 3) { // 第三步详情
                         this.roomSelected = _data.buyinghouse_room_list;
                         let _buyinghouseRoomList = [];
                         for (let item of _data.buyinghouse_room_list) {
@@ -816,7 +729,7 @@ export default {
                         this.buyinghouseRoomList = _buyinghouseRoomList;
                     }
                     
-                    if (this.flow_status === 1 || _data.current_step > 5) { // 第五步详情
+                    if (_data.current_step > 5) { // 第五步详情
                         this.form5.is_earnest_money_pay = _data.is_earnest_money_pay.toString();
                         this.form5.is_get_bank_doc = _data.is_get_bank_doc.toString();
                         this.form5.is_notice_pre_sale_time = _data.is_notice_pre_sale_time.toString();
@@ -824,9 +737,9 @@ export default {
                         this.form5.enter_park_doc_remark = _data.enter_park_doc_remark.toString();
                         this.form5.customer_true_intention = _data.customer_true_intention.toString();
                     }
-                    if (this.flow_status === 1 || _data.current_step > 6) { // 第六步详情
+                    if (_data.current_step > 6) { // 第六步详情
                         this.form6.total_price = _data.total_price.toString();
-                        this.form6.service_price = _data.service_price;
+                        this.form6.service_price = _data.service_price.toString();
                         this.form6.service_price_count = _data.service_price_count.toString();
                         this.form6.service_price_real_count = _data.service_price_real_count.toString();
                         this.form6.deposit_price = _data.deposit_price.toString();
@@ -844,16 +757,16 @@ export default {
                         this.form6.one_payment_amount = _data.one_payment_amount.toString();
                         this.form6.one_payment_date = _data.one_payment_date.toString();
                     }
-                    if (this.flow_status === 1 || _data.current_step > 7) { // 第七步详情
+                    if (_data.current_step > 7) { // 第七步详情
                         this.form7.is_sign_contract = _data.is_sign_contract.toString();
                         this.form7.sign_contract_time = _data.sign_contract_time.toString();
                         this.form7.is_get_loan = _data.is_get_loan.toString();
                     }
-                    if (this.flow_status === 1 || _data.current_step > 8) { // 第八步详情
+                    if (_data.current_step > 8) { // 第八步详情
                         this.form8.is_notice_owner_get_house = _data.is_notice_owner_get_house.toString();
                         this.form8.owner_get_house_time = _data.owner_get_house_time.toString();
                     }
-                    if (this.flow_status === 1 || _data.current_step > 9) { // 第九步详情
+                    if (_data.current_step > 9) { // 第九步详情
                         this.form9.is_get_house_certificate = _data.is_get_house_certificate.toString();
                         this.form9.certificate_no = _data.certificate_no.toString();
                         this.form9.get_house_certificate_time = _data.get_house_certificate_time.toString();
@@ -1007,43 +920,6 @@ export default {
                         }
                     });
                     break;
-                case 4: // 房屋定制
-                    let _buyinghouseRoomList = JSON.parse(JSON.stringify(this.buyinghouseRoomList))
-                    for(let item of _buyinghouseRoomList){
-                        item.discount_percent = parseFloat(item.discount_percent * 0.01);
-                        item.original_total_price = parseFloat(item.original_total_price);
-                        item.discount_cash = parseFloat(item.discount_cash);
-                        item.real_total_price = parseFloat(item.real_total_price)
-                    }
-                    let _postData = {
-                        current_step: 4, // 当前步骤
-                        f_id: this.f_id, // 流程标识
-                        c_id: this.c_id, // 客户标识
-                        list_buyinghouse_room: _buyinghouseRoomList
-                    }
-                    this.$https.post('/api/flow_buyinghouse/signed_customization_agreement', _postData).then((result) => {
-                        if (result.data.code == 0) {
-                            this.$message({
-                                type: 'success',
-                                showClose: true,
-                                message: '提交成功',
-                                duration: 1500,
-                                onClose: () => {
-                                    // 关闭当前dialog
-                                    this.closeDialog();
-                                    // 刷新列表
-                                    this.$emit('parentGetDataList');
-                                }
-                            })
-                        } else {
-                            this.$message({
-                                type: 'error',
-                                showClose: true,
-                                message: result.data.message
-                            })
-                        }
-                    })
-                    break;
                 case 5: // 预售准备
                     this.$refs.form5.validate((valid) => {
                         if (valid) {
@@ -1097,89 +973,15 @@ export default {
                             _postData.f_id = this.f_id; // 流程标识
                             _postData.c_id = this.c_id; // 客户标识
 
-                            _postData.pay_status = parseFloat(_postData.pay_status); // 付款方式
 
-                            _postData.service_price = parseFloat(_postData.service_price); // 服务费单价
-                            _postData.service_price_real_count = parseFloat(_postData.service_price_real_count); // 服务费单价
-                            _postData.real_transaction_price = parseFloat(this.buyinghouseRoomList_total_price); // F_成交总价(元)
+                            // 测试数据-还缺东西
+                            _postData.service_price_real_count = 0.01;
+                            _postData.deposit_price_real_count = 0.01;
+                            _postData.real_transaction_price = 0.01;
+                            _postData.mortgage_first_pay_amount = 0.01;
+                            _postData.mortgage_second_pay_amount = 0.01;
+                            _postData.total_price = 0.01;
 
-
-                            
-                            if (_postData.pay_status === 0) { // 按揭
-                                if (!_postData.mortgage_bank) {
-                                    this.$message({
-                                        type: 'error',
-                                        showClose: true,
-                                        message: '按揭银行不能为空'
-                                    })
-                                    return;
-                                }
-                                if (!_postData.mortgage_percent) {
-                                    this.$message({
-                                        type: 'error',
-                                        showClose: true,
-                                        message: '按揭成数不能为空'
-                                    })
-                                    return;
-                                }
-                                if (!_postData.mortgage_first_pay_date) {
-                                    this.$message({
-                                        type: 'error',
-                                        showClose: true,
-                                        message: '按揭首期付款日期不能为空'
-                                    })
-                                    return;
-                                }
-                                if (!_postData.mortgage_second_pay_date) {
-                                    this.$message({
-                                        type: 'error',
-                                        showClose: true,
-                                        message: '按揭二期付款日期不能为空'
-                                    })
-                                    return;
-                                }
-                                if (!_postData.mortgage_first_pay_amount) {
-                                    this.$message({
-                                        type: 'error',
-                                        showClose: true,
-                                        message: '按揭首期付款额度不能为空'
-                                    })
-                                    return;
-                                }
-                                if (!_postData.mortgage_second_pay_amount) {
-                                    this.$message({
-                                        type: 'error',
-                                        showClose: true,
-                                        message: '按揭二期付款额度不能为空'
-                                    })
-                                    return;
-                                }
-
-                                _postData.mortgage_percent = parseInt(_postData.mortgage_percent); // 按揭成数
-
-                                // _postData.mortgage_second_pay_amount = parseFloat(_postData.total_price * _postData.mortgage_percent * 0.1); // 按揭二期付款额度
-                                // _postData.mortgage_first_pay_amount = _postData.total_price - _postData.mortgage_second_pay_amount; // 按揭首期付款额度
-
-                            } else { //一次性
-                                if (!_postData.one_payment_amount) {
-                                    this.$message({
-                                        type: 'error',
-                                        showClose: true,
-                                        message: '一次性付款金额不能为空'
-                                    })
-                                    return;
-                                }
-                                if (!_postData.one_payment_date) {
-                                    this.$message({
-                                        type: 'error',
-                                        showClose: true,
-                                        message: '一次性付款日期不能为空'
-                                    })
-                                    return;
-                                }
-                            }
-
-                            console.log(_postData);
                             this.$https.post('/api/flow_buyinghouse/signed_subscribe_book', _postData).then((result) => {
                                 if (result.data.code == 0) {
                                     this.$message({
@@ -1616,6 +1418,16 @@ export default {
                 }
                 item.active = !item.active;
             }
+        },
+        buyinghouseRoomList_init() {
+            for(let item of this.buyinghouseRoomList) {
+            
+                item.original_total_price = (parseFloat(item.original_total_price) * parseFloat(item.built_area)).toFixed(2); // 原价
+                // if (item.discount_type === 1) { // 按百分比
+                //     item.real_total_price = parseFloat(item.original_total_price - item.original_total_price * (item.discount_percent * 0.01)).toFixed(2)
+                // }
+            }
+            console.log('变变变222')
         }
     },
     filters: {

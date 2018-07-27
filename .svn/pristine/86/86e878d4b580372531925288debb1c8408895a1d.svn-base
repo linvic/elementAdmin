@@ -280,6 +280,7 @@ const router = new Router({
         { path: '*', component: resolve => require(['../pages/404'], resolve) }
     ]
 });
+console.log(router)
 // 路由拦截
 router.beforeEach((to, from, next) => {
     if (to.path === '/') {

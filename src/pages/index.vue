@@ -10,7 +10,7 @@
 export default {
     data () {
         return {
-            msg: '主页预留',
+            msg: '智领销售系统',
             loading: true
         }
     },

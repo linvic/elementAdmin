@@ -120,10 +120,15 @@ export default {
             }
         },
         FlowDetails(row) { // 查看详情-
+            // this.frameParame = {
+            //     flow_type: row.transaction_type, //流程类别
+            //     c_id: row.c_id, // 客户ID
+            //     f_id: row.f_id //流程实例ID
+            // }
             this.frameParame = {
-                flow_type: row.transaction_type, //流程类别
-                c_id: row.c_id, // 客户ID
-                f_id: row.flow_id //流程实例ID
+                flow_type: 2, //流程类别
+                c_id: 35, // 客户ID
+                f_id: 8 //流程实例ID
             }
             this.dialogFlowDetails = true;
         },
