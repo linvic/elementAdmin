@@ -1,0 +1,1773 @@
+<template>
+    <div>
+        <el-card>
+            
+            <el-row>
+                <el-col :span="6" style="height: 700px;width: 150px;border-right: 5px solid #ebeef5;margin-right:15px;">
+                    <el-steps direction="vertical" :active="step" process-status="finish" finish-status="success">
+                        <el-step title="缴纳诚意金" @click.native="changeStep(0)" v-show="instance_step.indexOf('1') !== -1"></el-step>
+                        <el-step title="了解客户" @click.native="changeStep(1)" v-show="instance_step.indexOf('2') !== -1"></el-step>
+                        <el-step title="选房" @click.native="changeStep(2)" v-show="instance_step.indexOf('3') !== -1"></el-step>
+                        <el-step title="签定制协议" @click.native="changeStep(3)" v-show="instance_step.indexOf('4') !== -1"></el-step>
+                        <el-step title="预售准备" @click.native="changeStep(4)" v-show="instance_step.indexOf('5') !== -1"></el-step>
+                        <el-step title="签订认购书" @click.native="changeStep(5)" v-show="instance_step.indexOf('6') !== -1"></el-step>
+                        <el-step title="签定合同" @click.native="changeStep(6)" v-show="instance_step.indexOf('7') !== -1"></el-step>
+                        <el-step title="入伙通知" @click.native="changeStep(7)" v-show="instance_step.indexOf('8') !== -1"></el-step>
+                        <el-step title="领取房产证" @click.native="changeStep(8)" v-show="instance_step.indexOf('9') !== -1"></el-step>
+                    </el-steps>
+                </el-col>
+                <el-col :span="18">
+                    <div v-if="step === 0">
+                        <!-- 1缴纳诚意金 -->
+                        <el-form ref="form1" :rules="form1_rules" :model="form1" label-width="120px" :disabled="flowStep !== 1" :label-suffix="flowStep !== 1 ? '：' : ''">
+                            <el-form-item label="诚意金金额" prop="earnest_money_amount">
+                                <el-input v-model="form1.earnest_money_amount" @keyup.native="onkeyupPrice($event)" placeholder="数字，小数点两位" style="width: 200px">
+                                    <template slot="append">元</template>
+                                </el-input>
+                            </el-form-item>
+                            <el-form-item label="缴纳时间" prop="earnest_money_pay_time">
+                                <el-date-picker v-model="form1.earnest_money_pay_time" type="date" placeholder="选择日期" :editable="false"></el-date-picker>
+                            </el-form-item>
+                            <el-form-item label="缴纳备注">
+                                <el-input type="textarea" v-model="form1.earnest_money_remark" :rows="4"></el-input>
+                            </el-form-item>
+                            <el-form-item v-if="flowStep === 1">
+                                <el-button type="primary" @click="submit(1)">提交</el-button>
+                            </el-form-item>
+                        </el-form>
+                    </div>
+                    
+                    <div v-if="step === 1">
+                        <!-- 2了解客户 -->
+                        <el-form ref="form2" :rules="form2_rules" :model="form2" label-width="120px" :disabled="flowStep !== 2" :label-suffix="flowStep !== 2 ? '：' : ''">
+
+                            <el-form-item label=" ">
+                                <el-button type="text" @click="chanceEdit(c_id)">完善客户资料</el-button>
+                            </el-form-item>
+                            <el-form-item label="诚意金金额" prop="customer_information_status">
+                                <el-radio-group v-model="form2.customer_information_status">
+                                    <el-radio label="0">未完善</el-radio>
+                                    <el-radio label="1">部分完善</el-radio>
+                                    <el-radio label="2">已完善</el-radio>
+                                </el-radio-group>
+                            </el-form-item>
+                            <el-form-item label="诚意金金额" prop="custome_intention">
+                                <el-radio-group v-model="form2.custome_intention">
+                                    <el-radio label="0">自用</el-radio>
+                                    <el-radio label="1">短期内不自用</el-radio>
+                                    <el-radio label="2">投资</el-radio>
+                                    <el-radio label="3">自用投资</el-radio>
+                                    <el-radio label="4">不明朗</el-radio>
+                                </el-radio-group>
+                            </el-form-item>
+                            <el-form-item v-if="flowStep === 2">
+                                <el-button type="primary" @click="submit(2)">提交</el-button>
+                            </el-form-item>
+                        </el-form>
+                    </div>
+                    <div v-if="step === 2">
+                        <!-- 3选房 -->
+                        <el-form ref="form3" :model="form3" :rules="form3_rules" size="small" status-icon label-width="130px" v-show="flowStep === 3" >
+                            <el-row>
+                                <el-col :span="12">
+                                    <el-form-item label="项目名称" prop="project_id">
+                                        <el-select v-model="form3.project_id" @change="getBuildings">
+                                            <el-option v-for="item in projects" :key="item.project_id" :label="item.project_name" :value="item.project_id"></el-option>
+                                        </el-select>
+                                    </el-form-item>
+                                </el-col>
+                                <el-col :span="12">
+                                    <el-form-item label="楼宇名称" prop="building_id">
+                                        <el-select v-model="form3.building_id" @change="changeBuilding">
+                                            <el-option v-for="item in building" :key="item.building_id" :label="item.building_name" :value="item.building_id"></el-option>
+                                        </el-select>
+                                    </el-form-item>
+                                </el-col>
+                            </el-row>
+                            
+                        </el-form>
+                        <div>
+                            <div class="selling_rooms" v-show="form3.building_id !== ''">
+                                <ul class="statusTag">
+                                    <li><i class="el-icon-web-stop" style="color: #bbb;"></i> 未放盘</li>
+                                    <li><i class="el-icon-web-stop" style="color: #fff;"></i> 可售</li>
+                                    <li><i class="el-icon-web-stop" style="color: #409EFF;"></i> 预留</li>
+                                    <li><i class="el-icon-web-stop" style="color: #67c23a;"></i> 已选定</li>
+                                    <li><i class="el-icon-web-stop" style="color: #abe3ff;"></i> 已定制</li>
+                                    <li><i class="el-icon-web-stop" style="color: #0cf;"></i> 已认购</li>
+                                    <li><i class="el-icon-web-stop" style="color: #00cc66;"></i> 已签约</li>
+                                </ul>
+                                <div class="selling_rooms_list">
+                                    <table class="selling_table">
+                                        <thead>
+                                            <tr>
+                                                <th colspan="999">{{build_name}}</th>
+                                            </tr>
+                                        </thead>
+
+                                        <tbody>
+                                            <tr v-for="lists in roomList">
+
+                                                <!-- 放盘状态，0、未放盘status0，1、可售(待售)status1，2、预留status2 -->
+                                                <!-- 销售状态 0、待售，1、已选定status3，2、已定制status4，3、已认购status5，4、已签约status6 -->
+                                                <!-- 可选的状态：  可售的，预留的需要总监权限 -->
+                                                <td
+                                                v-for="list in lists.rooms"
+                                                :class="[list.active, list.open_status, list.sale_status, isChief] | filterRoomStatus"
+
+                                                @click="checkedRoom(list)"
+                                                >
+
+                                                    <p>{{list.room_name}}</p>
+                                                    <em>￥{{list.guide_price}}/㎡</em>
+                                                    <p>{{list.built_area}}㎡</p>
+                                                </td>
+                                                <!-- 房间数量不够 空td 来凑 -->
+                                                <td v-for="list in (roomMaxLength - lists.rooms.length)"></td>
+                                            </tr>
+
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                            <div class="m-t" v-show="roomSelected.length > 0">
+                            已选：
+                                <el-tag
+                                    :key="index"
+                                    type="success"
+                                    v-for="(tag, index) in roomSelected"
+                                    :disable-transitions="false"
+                                    >
+                                    {{tag.full_name || tag.room_all_name}}
+                                </el-tag>
+                            </div>
+                            <div class="m-t" v-if="flowStep === 3">
+                                <el-button type="primary" @click="submit(3)">提交</el-button>
+                            </div>
+                        </div>
+                    </div>
+                    <div v-if="step === 3">
+                        <!-- 4签定制协议 -->
+                        <table class="table-border">
+                            <thead>
+                                <tr>
+                                    <th>物业</th>
+                                    <th>原单价（元/平方米）</th>
+                                    <th>面积（平方米）</th>
+                                    <th width="200">折扣</th>
+                                    <th>价格（元）</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr v-for="item in buyinghouseRoomList">
+                                    <td>{{item.room_all_name}}</td>
+                                    <td>{{item.original_unit_price}}</td>
+                                    <td>{{item.built_area}}</td>
+                                    <td>
+                                        <el-select v-model="item.discount_type" placeholder="请选择活折扣方式" size="mini" style="width:200px;margin-bottom:5px;" :disabled="flowStep !== 4">
+                                            <el-option label="百分比折扣" :value="1"></el-option>
+                                            <el-option label="现金折扣" :value="2"></el-option>
+                                        </el-select>
+                                        <el-input v-if="item.discount_type === 1" v-model="item.discount_percent" @keyup.native="onkeyupPlusInt($event)" :minlength="1" placeholder="0-100" size="mini" style="width:200px;" :disabled="flowStep !== 4">
+                                            <template slot="append">%</template>
+                                        </el-input>
+                                        <el-input v-if="item.discount_type === 2" v-model="item.discount_cash" @keyup.native="onkeyupPrice($event)" :minlength="1" placeholder="现金折扣"  size="mini" style="width:200px;" :disabled="flowStep !== 4">
+                                            <template slot="prepend">减</template><template slot="append">元</template>
+                                        </el-input>
+                                    <td>{{item.real_total_price}}</td>
+                                </tr>
+                            </tbody>
+                            <tfoot>
+                                <tr>
+                                    <th>合计</th>
+                                    <td>-</td>
+                                    <td>{{buyinghouseRoomList_total_area}}</td>
+                                    <td>-</td>
+                                    <td>{{buyinghouseRoomList_total_price}}</td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                        <div class="text-center m-t" v-if="flowStep === 4">
+                            <el-button type="primary" @click="submit(4)">提交</el-button>
+                        </div>
+                    </div>
+                    <div v-if="step === 4">
+                        <!-- 5预售准备 -->
+                        <el-form ref="form5" :rules="form5_rules" :model="form5" label-width="180px" :disabled="flowStep !== 5" :label-suffix="flowStep !== 5 ? '：' : ''">
+                            <el-form-item label="是否已付清定制定金" prop="is_earnest_money_pay">
+                                <el-radio-group v-model="form5.is_earnest_money_pay">
+                                    <el-radio label="0">否</el-radio>
+                                    <el-radio label="1">是</el-radio>
+                                </el-radio-group>
+                            </el-form-item>
+                            <el-form-item label="是否已提交银行资料" prop="is_get_bank_doc">
+                                <el-radio-group v-model="form5.is_get_bank_doc">
+                                    <el-radio label="0">否</el-radio>
+                                    <el-radio label="1">是</el-radio>
+                                </el-radio-group>
+                            </el-form-item>
+                            <el-form-item label="是否已告知预售时间" prop="is_notice_pre_sale_time">
+                                <el-radio-group v-model="form5.is_notice_pre_sale_time">
+                                    <el-radio label="0">否</el-radio>
+                                    <el-radio label="1">是</el-radio>
+                                </el-radio-group>
+                            </el-form-item>
+                            <el-form-item label="整理入园资料" prop="is_get_enter_park_doc">
+                                <el-radio-group v-model="form5.is_get_enter_park_doc">
+                                    <el-radio label="0">未完成</el-radio>
+                                    <el-radio label="1">已完成</el-radio>
+                                    <el-input v-if="form5.is_get_enter_park_doc === '1'" v-model="form5.enter_park_doc_remark" placeholder="请输入档案袋编号" style="width:200px;margin-left:10px;" size="mini"></el-input>
+                                </el-radio-group>
+                            </el-form-item>
+                            <el-form-item label="客户真实意向" prop="customer_true_intention">
+                                <el-radio-group v-model="form5.customer_true_intention">
+                                    <el-radio label="0">自用</el-radio>
+                                    <el-radio label="1">投资</el-radio>
+                                    <el-radio label="2">两种都有</el-radio>
+                                </el-radio-group>
+                            </el-form-item>
+                            <el-form-item v-if="flowStep === 5">
+                                <el-button type="primary" @click="submit(5)">提交</el-button>
+                            </el-form-item>
+                        </el-form>
+                    </div>
+                    <div v-if="step === 5">
+                        <!-- 6签订认购书 -->
+                        <el-form ref="form6" :rules="form6_rules" :model="form6" label-width="150px" :disabled="flowStep !== 6" :label-suffix="flowStep !== 6 ? '：' : ''">
+                            <el-row>
+                                <el-col :span="12">
+                                    <el-form-item label="服务费单价" prop="service_price">
+                                        <el-input v-model="form6.service_price" @keyup.native="onkeyupPrice($event)" placeholder="数字，小数点两位" style="width: 200px">
+                                            <template slot="append">元</template>
+                                        </el-input>
+                                    </el-form-item>
+                                </el-col>
+                                <el-col :span="12">
+                                    <el-form-item label="保证金单价" prop="deposit_price">
+                                        <el-input v-model="form6.deposit_price" @keyup.native="onkeyupPrice($event)" placeholder="数字，小数点两位" style="width: 200px">
+                                            <template slot="append">元</template>
+                                        </el-input>
+                                    </el-form-item>
+                                </el-col>
+                            </el-row>
+                            <table class="table-border">
+                                <thead>
+                                    <tr>
+                                        <th>物业</th>
+                                        <th>原单价（元/平方米）</th>
+                                        <th>面积（平方米）</th>
+                                        <th>折扣（元/平米）</th>
+                                        <th>成交价格（元）</th>
+                                        <th>房款（元）</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr v-for="item,index in buyinghouseRoomList">
+                                        <td>{{item.room_all_name}}</td>
+                                        <td>{{item.original_unit_price}}</td>
+                                        <td>{{item.built_area}}</td>
+                                        <td>
+                                            {{item.discount_type === 1 ? item.discount_percent + '%' : item.discount_cash + '元'}}
+                                        <td>{{item.real_total_price}}</td>
+                                        <td>
+                                        <el-input v-model="itemTotalPrice[index]" @keyup.native="onkeyupPrice($event)" :minlength="1" size="mini" style="width:100px;" :disabled="flowStep !== 6">
+                                        </el-input></td>
+                                    </tr>
+                                </tbody>
+                                <tfoot>
+                                    <tr>
+                                        <th>合计</th>
+                                        <td>-</td>
+                                        <td>{{buyinghouseRoomList_total_area}}</td>
+                                        <td>-</td>
+                                        <td>{{buyinghouseRoomList_total_price}}</td>
+                                        <td>
+                                        <el-input v-model="form6.total_price" @keyup.native="onkeyupPrice($event)" :minlength="1" size="mini" style="width:100px;" :disabled="flowStep !== 6">
+                                        </el-input></td>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                            <el-row>
+                                <el-col :span="12">
+                                    <el-form-item label="服务费总计" prop="service_price_real_count">
+                                        <el-input v-model="form6.service_price_real_count" @keyup.native="onkeyupPrice($event)" placeholder="数字，小数点两位" style="width: 200px">
+                                            <template slot="append">元</template>
+                                        </el-input>
+                                    </el-form-item>
+                                </el-col>
+                                <el-col :span="12">
+                                    <el-form-item label="保证金总计" prop="deposit_price_real_count">
+                                        <el-input v-model="form6.deposit_price_real_count" @keyup.native="onkeyupPrice($event)" placeholder="数字，小数点两位" style="width: 200px">
+                                            <template slot="append">元</template>
+                                        </el-input>
+                                    </el-form-item>
+                                </el-col>
+                            </el-row>
+                            <el-row>
+                                <el-col :span="24">
+                                    <el-form-item label="房款总首付(含定金)" prop="first_pay_amount">
+                                        <el-input v-model="form6.first_pay_amount" @keyup.native="onkeyupPrice($event)" placeholder="数字，小数点两位" style="width: 200px">
+                                            <template slot="append">元</template>
+                                        </el-input>
+                                    </el-form-item>
+                                </el-col>
+                            </el-row>
+                            <el-row>
+                                <el-col :span="24">
+                                    <el-form-item label="付款方式" prop="pay_status">
+                                        <el-radio-group v-model="form6.pay_status">
+                                            <el-radio label="0">按揭</el-radio>
+                                            <el-radio label="1">一次性</el-radio>
+                                        </el-radio-group>
+                                    </el-form-item>
+                                </el-col>
+                            </el-row>
+                            <div v-if="form6.pay_status === '0'">
+                                <!-- 按揭 -->
+                                <el-row>
+                                    <el-col :span="12">
+                                        <el-form-item label="按揭银行" prop="mortgage_bank">
+                                            <el-autocomplete v-model="form6.mortgage_bank" :fetch-suggestions="querySearch" placeholder="请输入按揭银行"></el-autocomplete>
+                                        </el-form-item>
+                                    </el-col>
+                                    <el-col :span="12">
+                                        <el-form-item label="按揭成数" prop="mortgage_percent">
+                                            <el-input v-model="form6.mortgage_percent" @keyup.native="onkeyupPlusInt($event)" placeholder="整数" style="width: 200px">
+                                                <template slot="append">成</template>
+                                            </el-input>
+                                        </el-form-item>
+                                    </el-col>
+                                </el-row>
+                                <el-row>
+                                    <el-col :span="12">
+                                        <el-form-item label="按揭首期付款日期" prop="mortgage_first_pay_date">
+                                            <el-date-picker v-model="form6.mortgage_first_pay_date" type="date" placeholder="选择日期" :editable="false" style="width: 200px"></el-date-picker>
+                                        </el-form-item>
+                                    </el-col>
+                                    <el-col :span="12">
+                                        <el-form-item label="按揭二期付款日期" prop="mortgage_second_pay_date">
+                                            <el-date-picker v-model="form6.mortgage_second_pay_date" type="date" placeholder="选择日期" :editable="false" style="width: 200px"></el-date-picker>
+                                        </el-form-item>
+                                    </el-col>
+                                </el-row>
+                                <el-row>
+                                    <el-col :span="12">
+                                        <el-form-item label="按揭首期付款额度" prop="mortgage_first_pay_amount">
+                                            <el-input v-model="form6.mortgage_first_pay_amount" @keyup.native="onkeyupPrice($event)" placeholder="数字，小数点两位" style="width: 200px">
+                                                <template slot="append">元</template>
+                                            </el-input>
+                                        </el-form-item>
+                                    </el-col>
+                                    <el-col :span="12">
+                                        <el-form-item label="按揭二期付款额度" prop="mortgage_second_pay_amount">
+                                            <el-input v-model="form6.mortgage_second_pay_amount" @keyup.native="onkeyupPrice($event)" placeholder="数字，小数点两位" style="width: 200px">
+                                                <template slot="append">元</template>
+                                            </el-input>
+                                        </el-form-item>
+                                    </el-col>
+                                </el-row>
+                            </div>
+                            <div v-else-if="form6.pay_status === '1'">
+                                <!-- 一次性 -->
+                                <el-row>
+                                    <el-col :span="12">
+                                        <el-form-item label="一次性付款金额" prop="one_payment_amount">
+                                            <el-input v-model="form6.one_payment_amount" @keyup.native="onkeyupPrice($event)" placeholder="数字，小数点两位" style="width: 200px">
+                                                <template slot="append">元</template>
+                                            </el-input>
+                                        </el-form-item>
+                                    </el-col>
+                                    <el-col :span="12">
+                                        <el-form-item label="一次性付款日期" prop="one_payment_date">
+                                            <el-date-picker v-model="form6.one_payment_date" type="date" placeholder="选择日期" :editable="false" style="width: 200px"></el-date-picker>
+                                        </el-form-item>
+                                    </el-col>
+                                </el-row>
+                            </div>
+                            <el-form-item v-if="flowStep === 6">
+                                <el-button type="primary" @click="submit(6)">提交</el-button>
+                            </el-form-item>
+                        </el-form>
+                        
+                    </div>
+                    <div v-if="step === 6">
+                        <!-- 7签定合同 -->
+                        <el-form ref="form7" :rules="form7_rules" :model="form7" label-width="150px" :disabled="flowStep !== 7" :label-suffix="flowStep !== 7 ? '：' : ''">
+                            <el-form-item label="是否已完成签约" prop="is_sign_contract">
+                                <el-radio-group v-model="form7.is_sign_contract">
+                                    <el-radio label="1">是</el-radio>
+                                    <el-radio label="0">否</el-radio>
+                                </el-radio-group>
+                            </el-form-item>
+                            <el-form-item label="签约时间" prop="sign_contract_time">
+                                <el-date-picker v-model="form7.sign_contract_time" type="date" placeholder="选择日期" :editable="false"></el-date-picker>
+                            </el-form-item>
+                            <el-form-item label="放款情况" prop="is_get_loan">
+                                <el-radio-group v-model="form7.is_get_loan">
+                                    <el-radio label="1">已放款</el-radio>
+                                    <el-radio label="0">未放款</el-radio>
+                                </el-radio-group>
+                            </el-form-item>
+                            <el-form-item v-if="flowStep === 7">
+                                <el-button type="primary" @click="submit(7)">提交</el-button>
+                            </el-form-item>
+                        </el-form>
+                    </div>
+                    <div v-if="step === 7">
+                        <!-- 8入伙通知 -->
+                        <el-form ref="form8" :rules="form8_rules" :model="form8" label-width="150px" :disabled="flowStep !== 8" :label-suffix="flowStep !== 8 ? '：' : ''">
+                            <el-form-item label="是否已发入伙通知" prop="is_notice_owner_get_house">
+                                <el-radio-group v-model="form8.is_notice_owner_get_house">
+                                    <el-radio label="1">是</el-radio>
+                                    <el-radio label="0">否</el-radio>
+                                </el-radio-group>
+                            </el-form-item>
+                            <el-form-item label="预计入伙时间" prop="owner_get_house_time">
+                                <el-date-picker v-model="form8.owner_get_house_time" type="date" placeholder="选择日期" :editable="false"></el-date-picker>
+                            </el-form-item>
+                            <el-form-item v-if="flowStep === 8">
+                                <el-button type="primary" @click="submit(8)">提交</el-button>
+                            </el-form-item>
+                        </el-form>
+                    </div>
+                    <div v-if="step === 8">
+                        <!-- 9领取房产证 -->
+                        <el-form ref="form9" :rules="form9_rules" :model="form9" label-width="150px" :disabled="flowStep !== 9" :label-suffix="flowStep !== 9 ? '：' : ''">
+                            <el-form-item label="是否已领房产证" prop="is_get_house_certificate">
+                                <el-radio-group v-model="form9.is_get_house_certificate">
+                                    <el-radio label="1">是</el-radio>
+                                    <el-radio label="0">否</el-radio>
+                                </el-radio-group>
+                            </el-form-item>
+                            <el-form-item label="房产证编号" prop="certificate_no">
+                                <el-input v-model="form9.certificate_no" placeholder="请输入房产证编号"></el-input>
+                            </el-form-item>
+                            <el-form-item label="领证时间" prop="get_house_certificate_time">
+                                <el-date-picker v-model="form9.get_house_certificate_time" type="date" placeholder="选择日期" :editable="false"></el-date-picker>
+                            </el-form-item>
+                            <el-form-item v-if="flowStep === 9">
+                                <el-button type="primary" @click="submit(9)">提交</el-button>
+                            </el-form-item>
+                        </el-form>
+                    </div>
+                </el-col>
+            </el-row>
+            
+        </el-card>
+        <el-dialog v-if="dialogChanceEdit" title="编辑机会客户" :visible.sync="dialogChanceEdit" append-to-body width="1000px">
+            <ChanceEdit @closeDialog="closePageDialog"  @parentGetDataList="chanceEditCallback" :id="c_id"></ChanceEdit>
+        </el-dialog>
+    </div>
+</template>
+
+<script>
+import ChanceEdit from '@/pages/CRM/Chance/ChanceEdit'
+export default {
+    components: {
+        ChanceEdit
+    },
+    data () {
+        return {
+            step: 0, // setp 0 （ 步骤一 form1）当前显示的步骤
+            flowStep: 1, // 当前进行到哪一步骤
+            // step 是视角切换， flowStep 是固定值
+            // 例如：当前进行到第6步，则第6步是编辑状态，第6步之前的均是查看状态，第6步之后的无法点击（不可查看/编辑）
+            instance_step: ['1', '2', '3', '4', '5', '6', '7', '8', '9'], // 配置流程步骤
+            flow_status: 0, // 流程状态。0:进行中 1:成功后终止 2:失败后终止
+            form1: {
+                earnest_money_amount: '', // 诚意金金额
+                earnest_money_pay_time: '', // 诚意金缴纳时间
+                earnest_money_remark: '', // 诚意金缴纳备注
+            },
+            form1_rules: {
+                earnest_money_amount: [
+                    { required: true, message: '请输入诚意金金额', trigger: 'blur'}
+                ],
+                earnest_money_pay_time: [
+                    { required: true, message: '请输入诚意金缴纳时间', trigger: 'blur'}
+                ]
+            },
+            form2: {
+                customer_information_status: '', // 客户资料完善状态
+                custome_intention: '' // 客户购房意图
+            },
+            form2_rules: {
+                customer_information_status: [
+                    { required: true, message: '请选择客户资料完善情况', trigger: 'change'}
+                ],
+                custome_intention: [
+                    { required: true, message: '请选择客户购房意图', trigger: 'change'}
+                ]
+            },
+            dialogChanceEdit: false, // 编辑客户
+            isChief: false, // 是否是总监
+            form3: {
+                open_name: '',
+                project_id: '',
+                project_name: '',
+                building_id: '',
+                building_name: '',
+                process_type: ''
+            },
+            form3_rules: {
+                project_id: [
+                    { required: true, message: '请选择房产项目', trigger: 'change'}
+                ],
+                building_id: [
+                    { required: true, message: '请选择楼宇', trigger: 'change'}
+                ]
+            },
+            build_name: '',
+            roomMaxLength: 0,
+            roomSelected: [], // 选中的房间ID
+            roomList: [],
+            disabled: {
+                is_sale: true, // 可售按钮
+                is_reserve: true, // 预留按钮
+                is_cancel: true // 取消放盘
+            },
+            projects: [], // 项目
+            building: [], // 楼宇列表
+            buyinghouseRoomList: [], // 第四步
+            form5: {
+                is_earnest_money_pay: '', // E_是否已付清定制定金(0:否 1:是)
+                is_get_bank_doc: '', // E_是否已提交银行资料(0:否 1:是)
+                is_notice_pre_sale_time: '', // E_是否已告知预售时间(0:否 1:是)
+                is_get_enter_park_doc: '', // E_整理入园资料(0:未完成 1:已完成)
+                enter_park_doc_remark: '', // E_j整理入园资料_备注
+                customer_true_intention: '', // E_客户真实意向
+            },
+            form5_rules: {
+                is_earnest_money_pay: [
+                    { required: true, message: '请选择', trigger: 'change'}
+                ],
+                is_get_bank_doc: [
+                    { required: true, message: '请选择', trigger: 'change'}
+                ],
+                is_notice_pre_sale_time: [
+                    { required: true, message: '请选择', trigger: 'change'}
+                ],
+                is_get_enter_park_doc: [
+                    { required: true, message: '请选择', trigger: 'change'}
+                ],
+                customer_true_intention: [
+                    { required: true, message: '请选择', trigger: 'change'}
+                ]
+            },
+            form6: {
+                total_price: 0, // F_房款总价(元)
+                service_price: null, // F_服务费单价(元/平方)
+                service_price_count: 0, // F_服务费总计_自动计算(元)
+                service_price_real_count: 0, // F_服务费总计_实际发生额(元)
+                deposit_price: 0, // F_保证金单价(元/平方)
+                deposit_price_count: 0, // F_保证金总计_自动计算(元)
+                deposit_price_real_count: 0, // F_保证金总计_实际发生额(元)
+                real_transaction_price: '', // F_成交总价(元)
+                pay_status: '0', // F_付款方式(0:按揭 1:一次性)
+                first_pay_amount: '', // F_首款含定金金额(元)
+                mortgage_bank: '', // F_按揭银行
+                mortgage_percent: '', // F_按揭成数
+                mortgage_first_pay_amount: 0, // F_按揭首期付款金额(元)
+                mortgage_first_pay_date: '', // F_按揭首期付款日期
+                mortgage_second_pay_amount: 0, // F_按揭二期付款金额(元)
+                mortgage_second_pay_date: '', // F_按揭二期付款日期
+                one_payment_amount: '', // F_一次性付款金额(元)
+                one_payment_date: '', // F_一次性付款日期
+            },
+            banks: [], // 银行数组
+            form6_rules: {
+                service_price: [
+                    { required: true, message: '请填写服务费', trigger: 'blur'}
+                ]
+            },
+            form7: {
+                is_sign_contract: '0', // G_是否已完成签约
+                sign_contract_time: '', // G_签约时间
+                is_get_loan: '0' // G_放款情况(0:未放款 1:已放款)
+            },
+            form7_rules: {
+                is_sign_contract: [
+                    { required: true, message: '请选择', trigger: 'change'}
+                ],
+                sign_contract_time: [
+                    { required: true, message: '请输入预计入伙时间', trigger: 'blur'}
+                ],
+                is_get_loan: [
+                    { required: true, message: '请选择', trigger: 'change'}
+                ]
+            },
+            form8: {
+                is_notice_owner_get_house: '', // H_是否已发入伙通知(0:否 1:是)
+                owner_get_house_time: '' // H_预计入伙时间
+            },
+            form8_rules: {
+                is_notice_owner_get_house: [
+                    { required: true, message: '请选择', trigger: 'change'}
+                ],
+                owner_get_house_time: [
+                    { required: true, message: '请输入预计入伙时间', trigger: 'blur'}
+                ]
+            },
+            form9: {
+                is_get_house_certificate: '', // I_是否已领房产证(0:否 1:是)
+                certificate_no: '', // I_房产证编号
+                get_house_certificate_time: '' // I_领证时间
+            },
+            form9_rules: {
+                is_get_house_certificate: [
+                    { required: true, message: '请选择', trigger: 'change'}
+                ],
+                certificate_no: [
+                    { required: true, message: '请输入房产证编号', trigger: 'blur'}
+                ],
+                get_house_certificate_time: [
+                    { required: true, message: '请输入预计入伙时间', trigger: 'blur'}
+                ]
+            }
+        }
+    },
+    props: {
+        c_id: {
+            type: Number
+        },
+        f_id: {
+            type: Number
+        }
+    },
+    created() {
+        let _this = this;
+        this.$https.all([
+            this.getProjects(),
+            this.existRole()
+        ]).then(this.$https.spread(function (acct, perms) {
+            if (_this.c_id) { // 编辑
+                _this.getDeatils(); // 获取流程详情
+            }
+        }))
+    },
+    watch: {
+        'form5.is_get_enter_park_doc': function(val) { // 监听入园资料勾选状态
+            if (val === '0') {
+                this.form5.enter_park_doc_remark = '';
+            }
+        },
+        buyinghouseRoomList: { // 第四步
+            handler(newVal, oldVal) {
+                if(this.buyinghouseRoomList.length > 0){
+
+                    for(let item of this.buyinghouseRoomList) {
+
+                        let _originalUnitPrice = item.original_unit_price; // 单价
+                        let _Area = item.built_area; // 面积
+                        let _originalTotalPrice = (parseFloat(_originalUnitPrice) * parseFloat(_Area)).toFixed(2); // 原价
+                        let _realTotalPrice = 0; // 总价
+
+                        if (item.discount_type === 1) { // 按百分比
+                            _realTotalPrice = parseFloat(_originalTotalPrice - _originalTotalPrice * (item.discount_percent * 0.01)).toFixed(2);
+                        } else { // 现金折扣
+                            let _cashPrice = parseFloat(_originalUnitPrice - item.discount_cash).toFixed(2); // 打折后的单价
+                            _realTotalPrice = (parseFloat(_cashPrice) * parseFloat(_Area)).toFixed(2);
+                            // 计算总价
+                        }
+
+                        item.original_total_price = _originalTotalPrice; // 赋值原价
+                        item.real_total_price = _realTotalPrice; // 赋值总价
+                    }
+
+                }
+            },
+            deep: true
+        },
+        'form6.service_price': function(val) {// 第6步：监听服务费单价
+            let _servicePrice = parseFloat(val * this.buyinghouseRoomList_total_area);
+            this.form6.service_price_count = _servicePrice;
+            this.form6.service_price_real_count = _servicePrice;
+        },
+        itemTotalPrice: { // 第6步：计算总房款
+            handler(newVal, oldVal) {
+                let _total_price = 0;
+                for(let item of this.itemTotalPrice) {
+
+                    _total_price += parseFloat(item);
+                }
+                this.form6.total_price = parseFloat(_total_price.toFixed(2));
+            },
+            deep: true
+        },
+        'form6.deposit_price': function(val) { // 第6步：监听保证金
+            let _depositPrice = parseFloat(val * this.buyinghouseRoomList_total_area);
+            this.form6.deposit_price_count = _depositPrice;
+            this.form6.deposit_price_real_count = _depositPrice;
+        },
+        'form6.mortgage_percent': function(val) { // 第6步：监听按揭
+            this.form6.mortgage_second_pay_amount = parseFloat((this.form6.total_price * this.form6.mortgage_percent * 0.1).toFixed(2)); // 按揭二期付款额度
+            this.form6.mortgage_first_pay_amount = parseFloat((this.form6.total_price - this.form6.mortgage_second_pay_amount).toFixed(2)); // 按揭首期付款额度
+        }
+
+                                
+    },
+    computed:{
+        buyinghouseRoomList_total_area: function() { // 总面积
+            let _area = 0;
+            for(let item of this.buyinghouseRoomList) {
+                _area += parseFloat(item.built_area);
+            }
+            return _area.toFixed(2)
+        },
+        buyinghouseRoomList_total_price: function() { // 总成交价
+            let _price = 0;
+            for(let item of this.buyinghouseRoomList) {
+                _price += parseFloat(item.real_total_price);
+            }
+            return _price.toFixed(2)
+        },
+        itemTotalPrice: function() { // 房款
+            let _arr = [];
+            for(let item of this.buyinghouseRoomList) {
+                let _price =  parseFloat(item.real_total_price) - (item.built_area * this.form6.service_price)
+                _arr.push( _price.toFixed(2) );
+            }
+            return _arr
+        }
+    },
+    methods: {
+        changeStep(val) {
+            console.log(val,this.flow_status)
+            if (this.flow_status === 1) { // 流程走完状态，爱走哪走哪
+
+                this.step = val;
+
+            } else { // 流程终止或进行中
+
+                if (val < this.flowStep) { // 设置可点击的步骤
+                    this.step = val;
+                }
+
+            }
+        },
+        existRole() { // 验证功能权限
+
+            this.$https.get('/api/Account/exist_role?module_code=EstateSelling').then((result) => {
+                if (result.data.code == 0) {
+                    // 0 有权限
+                    this.isChief = true;
+                } else if (result.data.code == 9999) {
+                    // 9999 无
+                    this.isChief = false;
+                } else {
+                    this.$message({
+                        type: 'error',
+                        showClose: true,
+                        message: result.data.message
+                    })
+                }
+            })
+        },
+        closePageDialog(name) { // 关闭弹层
+            this[name] = false;
+        },
+        chanceEdit() { // 修改客户信息
+            this.dialogChanceEdit = true;
+        },
+        chanceEditCallback() {
+            console.log('aaaaa')
+        },
+        getDeatils() { // 获取流程详情
+            this.$https.get('/api/flow_buyinghouse/get_flow_buyinghouse_details?f_id=' + this.f_id + '&c_id=' + this.c_id).then((result) => {
+                if (result.data.code == 0) {
+                    let _data = result.data.data;
+                    this.flowStep = Number(_data.current_step); // 当前步骤
+                    this.step = Number(_data.current_step) - 1; // 当前步骤
+                    this.instance_step = _data.instance_step.split(',');// 配置步骤  如 1,2,3,4,5,6,7,8,9
+                    this.flow_status = Number(_data.flow_status); // 流程状态 0:进行中 1:成功后终止 2:失败后终止
+                    if(this.flow_status === 1) this.step = 8;
+                    if (this.flow_status === 1 || _data.current_step > 1) { // 第一步详情
+                        this.form1.earnest_money_amount = _data.earnest_money_amount.toString();
+                        this.form1.earnest_money_pay_time = _data.earnest_money_pay_time.toString();
+                        this.form1.earnest_money_remark = _data.earnest_money_remark.toString();
+                    }
+                    if (this.flow_status === 1 || _data.current_step > 2) { // 第二步详情
+                        this.form2.customer_information_status = _data.customer_information_status.toString();
+                        this.form2.custome_intention = _data.custome_intention.toString();
+                    }
+                    if (this.flow_status === 1 || _data.current_step > 3) { // 第三步详情
+                        this.roomSelected = _data.buyinghouse_room_list;
+                        let _buyinghouseRoomList = [];
+                        for (let item of _data.buyinghouse_room_list) {
+                            let _item = {
+                                f_id: item.f_id,
+                                project_id: item.project_id,
+                                building_id: item.building_id,
+                                floor_id: item.floor_id,
+                                room_id: item.room_id,
+                                room_name: item.room_name,
+                                room_all_name: item.room_all_name,
+                                original_unit_price: item.original_unit_price,
+                                built_area: item.built_area,
+                                original_total_price: item.original_total_price,
+                                discount_type: item.discount_type,
+                                discount_percent: item.discount_percent,
+                                discount_cash: item.discount_cash,
+                                real_total_price: item.real_total_price,
+                                cl_id: item.cl_id
+                            }
+                            _buyinghouseRoomList.push(_item);
+                        }
+                        this.buyinghouseRoomList = _buyinghouseRoomList;
+                    }
+                    
+                    if (this.flow_status === 1 || _data.current_step > 5) { // 第五步详情
+                        this.form5.is_earnest_money_pay = _data.is_earnest_money_pay.toString();
+                        this.form5.is_get_bank_doc = _data.is_get_bank_doc.toString();
+                        this.form5.is_notice_pre_sale_time = _data.is_notice_pre_sale_time.toString();
+                        this.form5.is_get_enter_park_doc = _data.is_get_enter_park_doc.toString();
+                        this.form5.enter_park_doc_remark = _data.enter_park_doc_remark.toString();
+                        this.form5.customer_true_intention = _data.customer_true_intention.toString();
+                    }
+                    if (this.flow_status === 1 || _data.current_step > 6) { // 第六步详情
+                        this.form6.total_price = _data.total_price.toString();
+                        this.form6.service_price = _data.service_price;
+                        this.form6.service_price_count = _data.service_price_count.toString();
+                        this.form6.service_price_real_count = _data.service_price_real_count.toString();
+                        this.form6.deposit_price = _data.deposit_price.toString();
+                        this.form6.deposit_price_count = _data.deposit_price_count.toString();
+                        this.form6.deposit_price_real_count = _data.deposit_price_real_count.toString();
+                        this.form6.real_transaction_price = _data.real_transaction_price.toString();
+                        this.form6.pay_status = _data.pay_status.toString();
+                        this.form6.first_pay_amount = _data.first_pay_amount.toString();
+                        this.form6.mortgage_bank = _data.mortgage_bank.toString();
+                        this.form6.mortgage_percent = _data.mortgage_percent.toString();
+                        this.form6.mortgage_first_pay_amount = _data.mortgage_first_pay_amount.toString();
+                        this.form6.mortgage_first_pay_date = _data.mortgage_first_pay_date.toString();
+                        this.form6.mortgage_second_pay_amount = _data.mortgage_second_pay_amount.toString();
+                        this.form6.mortgage_second_pay_date = _data.mortgage_second_pay_date.toString();
+                        this.form6.one_payment_amount = _data.one_payment_amount.toString();
+                        this.form6.one_payment_date = _data.one_payment_date.toString();
+                    }
+                    if (this.flow_status === 1 || _data.current_step > 7) { // 第七步详情
+                        this.form7.is_sign_contract = _data.is_sign_contract.toString();
+                        this.form7.sign_contract_time = _data.sign_contract_time.toString();
+                        this.form7.is_get_loan = _data.is_get_loan.toString();
+                    }
+                    if (this.flow_status === 1 || _data.current_step > 8) { // 第八步详情
+                        this.form8.is_notice_owner_get_house = _data.is_notice_owner_get_house.toString();
+                        this.form8.owner_get_house_time = _data.owner_get_house_time.toString();
+                    }
+                    if (this.flow_status === 1 || _data.current_step > 9) { // 第九步详情
+                        this.form9.is_get_house_certificate = _data.is_get_house_certificate.toString();
+                        this.form9.certificate_no = _data.certificate_no.toString();
+                        this.form9.get_house_certificate_time = _data.get_house_certificate_time.toString();
+                    }
+                } else {
+                    this.$message({
+                        type: 'error',
+                        showClose: true,
+                        message: result.data.message
+                    })
+                }
+            })
+
+        },
+        submit(_step) { // 提交  _setp 与步骤值等同
+                
+            switch (_step) {
+                case 1: // 缴纳诚意金
+                    this.$refs.form1.validate((valid) => {
+                        if (valid) {
+                            let _postData = {
+                                earnest_money_amount: this.form1.earnest_money_amount, // 诚意金金额
+                                earnest_money_pay_time: this.form1.earnest_money_pay_time, // 诚意金缴纳时间
+                                earnest_money_remark: this.form1.earnest_money_remark, // 诚意金缴纳备注
+                                current_step: 1, // 当前步骤
+                                f_id: this.f_id, // 流程标识
+                                c_id: this.c_id // 客户标识
+                            }
+                            this.$https.post('/api/flow_buyinghouse/pay_earnest_money', _postData).then((result) => {
+                                if (result.data.code == 0) {
+                                    this.$message({
+                                        type: 'success',
+                                        showClose: true,
+                                        message: '提交成功',
+                                        duration: 1500,
+                                        onClose: () => {
+                                            // 关闭当前dialog
+                                            this.closeDialog();
+                                            // 刷新列表
+                                            this.$emit('parentGetDataList');
+                                        }
+                                    })
+                                } else {
+                                    this.$message({
+                                        type: 'error',
+                                        showClose: true,
+                                        message: result.data.message
+                                    })
+                                }
+                            })
+                            
+
+                        } else {
+                            console.error('验证失败');
+                            return false;
+                        }
+                    });
+                    break;
+                case 2: // 了解客户-完成客户资料
+                    this.$refs.form2.validate((valid) => {
+                        if (valid) {
+                            let _postData = {
+                                customer_information_status: this.form2.customer_information_status, // 客户资料完善状态
+                                custome_intention: this.form2.custome_intention, // 客户购房意图
+                                current_step: 2, // 当前步骤
+                                f_id: this.f_id, // 流程标识
+                                c_id: this.c_id // 客户标识
+                            }
+                            this.$https.post('/api/flow_buyinghouse/complete_customer_information', _postData).then((result) => {
+                                if (result.data.code == 0) {
+                                    this.$message({
+                                        type: 'success',
+                                        showClose: true,
+                                        message: '提交成功',
+                                        duration: 1500,
+                                        onClose: () => {
+                                            // 关闭当前dialog
+                                            this.closeDialog();
+                                            // 刷新列表
+                                            this.$emit('parentGetDataList');
+                                        }
+                                    })
+                                } else {
+                                    this.$message({
+                                        type: 'error',
+                                        showClose: true,
+                                        message: result.data.message
+                                    })
+                                }
+                            })
+                            
+
+                        } else {
+                            console.error('验证失败');
+                            return false;
+                        }
+                    });
+                    break;
+                case 3: // 选房
+                    this.$refs.form3.validate((valid) => {
+                        if (valid) {
+                            let _postData = {
+                                current_step: 3, // 当前步骤
+                                f_id: this.f_id, // 流程标识
+                                c_id: this.c_id, // 客户标识
+                                list_buyinghouse_room: []
+                            }
+                            for (let _room of this.roomSelected) {
+                                let total_price = (parseFloat(_room.guide_price) * parseFloat(_room.built_area)).toFixed(2)
+                                let _item = {
+                                    f_id: this.f_id,
+                                    project_id: _room.project_id,
+                                    building_id: _room.building_id,
+                                    floor_id: _room.floor_id,
+                                    room_id: _room.room_id,
+                                    room_name: _room.room_name,
+                                    room_all_name: _room.full_name,
+                                    original_unit_price: _room.guide_price,
+                                    built_area: _room.built_area,
+                                    original_total_price: total_price
+                                }
+                                _postData.list_buyinghouse_room.push(_item)
+                            }
+                            this.$https.post('/api/flow_buyinghouse/selection_room', _postData).then((result) => {
+                                if (result.data.code == 0) {
+                                    this.$message({
+                                        type: 'success',
+                                        showClose: true,
+                                        message: '提交成功',
+                                        duration: 1500,
+                                        onClose: () => {
+                                            // 关闭当前dialog
+                                            this.closeDialog();
+                                            // 刷新列表
+                                            this.$emit('parentGetDataList');
+                                        }
+                                    })
+                                } else {
+                                    this.$message({
+                                        type: 'error',
+                                        showClose: true,
+                                        message: result.data.message
+                                    })
+                                }
+                            })
+                            
+
+                        } else {
+                            console.error('验证失败');
+                            return false;
+                        }
+                    });
+                    break;
+                case 4: // 房屋定制
+                    let _buyinghouseRoomList = JSON.parse(JSON.stringify(this.buyinghouseRoomList))
+                    for(let item of _buyinghouseRoomList){
+                        item.discount_percent = parseFloat(item.discount_percent * 0.01);
+                        item.original_total_price = parseFloat(item.original_total_price);
+                        item.discount_cash = parseFloat(item.discount_cash);
+                        item.real_total_price = parseFloat(item.real_total_price)
+                    }
+                    let _postData = {
+                        current_step: 4, // 当前步骤
+                        f_id: this.f_id, // 流程标识
+                        c_id: this.c_id, // 客户标识
+                        list_buyinghouse_room: _buyinghouseRoomList
+                    }
+                    this.$https.post('/api/flow_buyinghouse/signed_customization_agreement', _postData).then((result) => {
+                        if (result.data.code == 0) {
+                            this.$message({
+                                type: 'success',
+                                showClose: true,
+                                message: '提交成功',
+                                duration: 1500,
+                                onClose: () => {
+                                    // 关闭当前dialog
+                                    this.closeDialog();
+                                    // 刷新列表
+                                    this.$emit('parentGetDataList');
+                                }
+                            })
+                        } else {
+                            this.$message({
+                                type: 'error',
+                                showClose: true,
+                                message: result.data.message
+                            })
+                        }
+                    })
+                    break;
+                case 5: // 预售准备
+                    this.$refs.form5.validate((valid) => {
+                        if (valid) {
+                            let _postData = {
+                                is_earnest_money_pay: this.form5.is_earnest_money_pay, // E_是否已付清定制定金(0:否 1:是)
+                                is_get_bank_doc: this.form5.is_get_bank_doc, // E_是否已提交银行资料(0:否 1:是)
+                                is_notice_pre_sale_time: this.form5.is_notice_pre_sale_time, // E_是否已告知预售时间(0:否 1:是)
+                                is_get_enter_park_doc: this.form5.is_get_enter_park_doc, // E_整理入园资料(0:未完成 1:已完成)
+                                enter_park_doc_remark: this.form5.enter_park_doc_remark, // E_j整理入园资料_备注
+                                customer_true_intention: this.form5.customer_true_intention, // E_客户真实意向
+                                current_step: 5, // 当前步骤
+                                f_id: this.f_id, // 流程标识
+                                c_id: this.c_id // 客户标识
+                            }
+                            this.$https.post('/api/flow_buyinghouse/pre_sale_preparation', _postData).then((result) => {
+                                if (result.data.code == 0) {
+                                    this.$message({
+                                        type: 'success',
+                                        showClose: true,
+                                        message: '提交成功',
+                                        duration: 1500,
+                                        onClose: () => {
+                                            // 关闭当前dialog
+                                            this.closeDialog();
+                                            // 刷新列表
+                                            this.$emit('parentGetDataList');
+                                        }
+                                    })
+                                } else {
+                                    this.$message({
+                                        type: 'error',
+                                        showClose: true,
+                                        message: result.data.message
+                                    })
+                                }
+                            })
+                            
+
+                        } else {
+                            console.error('验证失败');
+                            return false;
+                        }
+                    });
+                    break;
+                case 6: // 签订认购书
+                    this.$refs.form6.validate((valid) => {
+                        if (valid) {
+                            let _postData = JSON.parse(JSON.stringify(this.form6));
+
+                            _postData.current_step = 6; // 当前步骤
+                            _postData.f_id = this.f_id; // 流程标识
+                            _postData.c_id = this.c_id; // 客户标识
+
+                            _postData.pay_status = parseFloat(_postData.pay_status); // 付款方式
+
+                            _postData.service_price = parseFloat(_postData.service_price); // 服务费单价
+                            _postData.service_price_real_count = parseFloat(_postData.service_price_real_count); // 服务费单价
+                            _postData.real_transaction_price = parseFloat(this.buyinghouseRoomList_total_price); // F_成交总价(元)
+
+
+                            
+                            if (_postData.pay_status === 0) { // 按揭
+                                if (!_postData.mortgage_bank) {
+                                    this.$message({
+                                        type: 'error',
+                                        showClose: true,
+                                        message: '按揭银行不能为空'
+                                    })
+                                    return;
+                                }
+                                if (!_postData.mortgage_percent) {
+                                    this.$message({
+                                        type: 'error',
+                                        showClose: true,
+                                        message: '按揭成数不能为空'
+                                    })
+                                    return;
+                                }
+                                if (!_postData.mortgage_first_pay_date) {
+                                    this.$message({
+                                        type: 'error',
+                                        showClose: true,
+                                        message: '按揭首期付款日期不能为空'
+                                    })
+                                    return;
+                                }
+                                if (!_postData.mortgage_second_pay_date) {
+                                    this.$message({
+                                        type: 'error',
+                                        showClose: true,
+                                        message: '按揭二期付款日期不能为空'
+                                    })
+                                    return;
+                                }
+                                if (!_postData.mortgage_first_pay_amount) {
+                                    this.$message({
+                                        type: 'error',
+                                        showClose: true,
+                                        message: '按揭首期付款额度不能为空'
+                                    })
+                                    return;
+                                }
+                                if (!_postData.mortgage_second_pay_amount) {
+                                    this.$message({
+                                        type: 'error',
+                                        showClose: true,
+                                        message: '按揭二期付款额度不能为空'
+                                    })
+                                    return;
+                                }
+
+                                _postData.mortgage_percent = parseInt(_postData.mortgage_percent); // 按揭成数
+
+                                // _postData.mortgage_second_pay_amount = parseFloat(_postData.total_price * _postData.mortgage_percent * 0.1); // 按揭二期付款额度
+                                // _postData.mortgage_first_pay_amount = _postData.total_price - _postData.mortgage_second_pay_amount; // 按揭首期付款额度
+
+                            } else { //一次性
+                                if (!_postData.one_payment_amount) {
+                                    this.$message({
+                                        type: 'error',
+                                        showClose: true,
+                                        message: '一次性付款金额不能为空'
+                                    })
+                                    return;
+                                }
+                                if (!_postData.one_payment_date) {
+                                    this.$message({
+                                        type: 'error',
+                                        showClose: true,
+                                        message: '一次性付款日期不能为空'
+                                    })
+                                    return;
+                                }
+                            }
+
+                            console.log(_postData);
+                            this.$https.post('/api/flow_buyinghouse/signed_subscribe_book', _postData).then((result) => {
+                                if (result.data.code == 0) {
+                                    this.$message({
+                                        type: 'success',
+                                        showClose: true,
+                                        message: '提交成功',
+                                        duration: 1500,
+                                        onClose: () => {
+                                            // 关闭当前dialog
+                                            this.closeDialog();
+                                            // 刷新列表
+                                            this.$emit('parentGetDataList');
+                                        }
+                                    })
+                                } else {
+                                    this.$message({
+                                        type: 'error',
+                                        showClose: true,
+                                        message: result.data.message
+                                    })
+                                }
+                            })
+                            
+
+                        } else {
+                            console.error('验证失败');
+                            return false;
+                        }
+                    });
+                    break;
+                case 7: // 签订合同
+                    this.$refs.form7.validate((valid) => {
+                        if (valid) {
+                            let _postData = {
+                                is_sign_contract: this.form7.is_sign_contract, // G_是否已完成签约
+                                sign_contract_time: this.form7.sign_contract_time, // G_签约时间
+                                is_get_loan: this.form7.is_get_loan, // G_放款情况(0:未放款 1:已放款)
+                                current_step: 7, // 当前步骤
+                                f_id: this.f_id, // 流程标识
+                                c_id: this.c_id // 客户标识
+                            }
+                            this.$https.post('/api/flow_buyinghouse/signer_contract', _postData).then((result) => {
+                                if (result.data.code == 0) {
+                                    this.$message({
+                                        type: 'success',
+                                        showClose: true,
+                                        message: '提交成功',
+                                        duration: 1500,
+                                        onClose: () => {
+                                            // 关闭当前dialog
+                                            this.closeDialog();
+                                            // 刷新列表
+                                            this.$emit('parentGetDataList');
+                                        }
+                                    })
+                                } else {
+                                    this.$message({
+                                        type: 'error',
+                                        showClose: true,
+                                        message: result.data.message
+                                    })
+                                }
+                            })
+                            
+
+                        } else {
+                            console.error('验证失败');
+                            return false;
+                        }
+                    });
+                    break;
+                case 8: // 入伙通知
+                    this.$refs.form8.validate((valid) => {
+                        if (valid) {
+                            let _postData = {
+                                is_notice_owner_get_house: this.form8.is_notice_owner_get_house, // H_是否已发入伙通知(0:否 1:是)
+                                owner_get_house_time: this.form8.owner_get_house_time, // H_预计入伙时间
+                                current_step: 8, // 当前步骤
+                                f_id: this.f_id, // 流程标识
+                                c_id: this.c_id // 客户标识
+                            }
+                            this.$https.post('/api/flow_buyinghouse/notice_owner', _postData).then((result) => {
+                                if (result.data.code == 0) {
+                                    this.$message({
+                                        type: 'success',
+                                        showClose: true,
+                                        message: '提交成功',
+                                        duration: 1500,
+                                        onClose: () => {
+                                            // 关闭当前dialog
+                                            this.closeDialog();
+                                            // 刷新列表
+                                            this.$emit('parentGetDataList');
+                                        }
+                                    })
+                                } else {
+                                    this.$message({
+                                        type: 'error',
+                                        showClose: true,
+                                        message: result.data.message
+                                    })
+                                }
+                            })
+                            
+
+                        } else {
+                            console.error('验证失败');
+                            return false;
+                        }
+                    });
+                    break;
+                case 9: // 领取房产证
+                    this.$refs.form9.validate((valid) => {
+                        if (valid) {
+                            let _postData = {
+                                is_get_house_certificate: this.form9.is_get_house_certificate, // I_是否已领房产证(0:否 1:是)
+                                certificate_no: this.form9.certificate_no, // I_房产证编号
+                                get_house_certificate_time: this.form9.get_house_certificate_time, // I_领证时间
+                                current_step: 9, // 当前步骤
+                                f_id: this.f_id, // 流程标识
+                                c_id: this.c_id // 客户标识
+                            }
+                            this.$https.post('/api/flow_buyinghouse/get_house_certificate', _postData).then((result) => {
+                                if (result.data.code == 0) {
+                                    this.$message({
+                                        type: 'success',
+                                        showClose: true,
+                                        message: '提交成功',
+                                        duration: 1500,
+                                        onClose: () => {
+                                            // 关闭当前dialog
+                                            this.closeDialog();
+                                            // 刷新列表
+                                            this.$emit('parentGetDataList');
+                                        }
+                                    })
+                                } else {
+                                    this.$message({
+                                        type: 'error',
+                                        showClose: true,
+                                        message: result.data.message
+                                    })
+                                }
+                            })
+                            
+
+                        } else {
+                            console.error('验证失败');
+                            return false;
+                        }
+                    });
+                    break;
+                default:
+                    // statements_def
+                    break;
+            }
+            
+        },
+        closeDialog(name) { // 关闭当前
+            // this.$refs.form.resetFields(); // 重置表单
+            if (!name) {
+                this.$emit('closeDialog', 'FlowFrame'); // 执行父组件关闭方法
+            } else {
+                this.$emit('closeDialog', name); // 执行父组件关闭方法
+            }
+        },
+        querySearch(queryString, cb) {
+            var banks = this.banks;
+            var results = queryString ? banks.filter(this.createFilter(queryString)) : banks;
+            // 调用 callback 返回建议列表的数据
+            cb(results);
+        },
+        createFilter(queryString) {
+            return (banks) => {
+              return (banks.value.toLowerCase().indexOf(queryString.toLowerCase()) === 0);
+            };
+        },
+        loadBank() {
+            return [
+                {code: 'CDB', value: '国家开发银行'},
+                {code: 'ICBC', value: '中国工商银行'},
+                {code: 'ABC', value: '中国农业银行'},
+                {code: 'BOC', value: '中国银行'},
+                {code: 'CCB', value: '中国建设银行'},
+                {code: 'PSBC', value: '中国邮政储蓄银行'},
+                {code: 'COMM', value: '交通银行'},
+                {code: 'CMB', value: '招商银行'},
+                {code: 'SPDB', value: '上海浦东发展银行'},
+                {code: 'CIB', value: '兴业银行'},
+                {code: 'HXBANK', value: '华夏银行'},
+                {code: 'GDB', value: '广东发展银行'},
+                {code: 'CMBC', value: '中国民生银行'},
+                {code: 'CITIC', value: '中信银行'},
+                {code: 'CEB', value: '中国光大银行'},
+                {code: 'EGBANK', value: '恒丰银行'},
+                {code: 'CZBANK', value: '浙商银行'},
+                {code: 'BOHAIB', value: '渤海银行'},
+                {code: 'SPABANK', value: '平安银行'},
+                {code: 'SHRCB', value: '上海农村商业银行'},
+                {code: 'YXCCB', value: '玉溪市商业银行'},
+                {code: 'YDRCB', value: '尧都农商行'},
+                {code: 'BJBANK', value: '北京银行'},
+                {code: 'SHBANK', value: '上海银行'},
+                {code: 'JSBANK', value: '江苏银行'},
+                {code: 'HZCB', value: '杭州银行'},
+                {code: 'NJCB', value: '南京银行'},
+                {code: 'NBBANK', value: '宁波银行'},
+                {code: 'HSBANK', value: '徽商银行'},
+                {code: 'CSCB', value: '长沙银行'},
+                {code: 'CDCB', value: '成都银行'},
+                {code: 'CQBANK', value: '重庆银行'},
+                {code: 'DLB', value: '大连银行'},
+                {code: 'NCB', value: '南昌银行'},
+                {code: 'FJHXBC', value: '福建海峡银行'},
+                {code: 'HKB', value: '汉口银行'},
+                {code: 'WZCB', value: '温州银行'},
+                {code: 'QDCCB', value: '青岛银行'},
+                {code: 'TZCB', value: '台州银行'},
+                {code: 'JXBANK', value: '嘉兴银行'},
+                {code: 'CSRCB', value: '常熟农村商业银行'},
+                {code: 'NHB', value: '南海农村信用联社'},
+                {code: 'CZRCB', value: '常州农村信用联社'},
+                {code: 'H3CB', value: '内蒙古银行'},
+                {code: 'SXCB', value: '绍兴银行'},
+                {code: 'SDEB', value: '顺德农商银行'},
+                {code: 'WJRCB', value: '吴江农商银行'},
+                {code: 'ZBCB', value: '齐商银行'},
+                {code: 'GYCB', value: '贵阳市商业银行'},
+                {code: 'ZYCBANK', value: '遵义市商业银行'},
+                {code: 'HZCCB', value: '湖州市商业银行'},
+                {code: 'DAQINGB', value: '龙江银行'},
+                {code: 'JINCHB', value: '晋城银行JCBANK'},
+                {code: 'ZJTLCB', value: '浙江泰隆商业银行'},
+                {code: 'GDRCC', value: '广东省农村信用社联合社'},
+                {code: 'DRCBCL', value: '东莞农村商业银行'},
+                {code: 'MTBANK', value: '浙江民泰商业银行'},
+                {code: 'GCB', value: '广州银行'},
+                {code: 'LYCB', value: '辽阳市商业银行'},
+                {code: 'JSRCU', value: '江苏省农村信用联合社'},
+                {code: 'LANGFB', value: '廊坊银行'},
+                {code: 'CZCB', value: '浙江稠州商业银行'},
+                {code: 'DYCB', value: '德阳商业银行'},
+                {code: 'JZBANK', value: '晋中市商业银行'},
+                {code: 'BOSZ', value: '苏州银行'},
+                {code: 'GLBANK', value: '桂林银行'},
+                {code: 'URMQCCB', value: '乌鲁木齐市商业银行'},
+                {code: 'CDRCB', value: '成都农商银行'},
+                {code: 'ZRCBANK', value: '张家港农村商业银行'},
+                {code: 'BOD', value: '东莞银行'},
+                {code: 'LSBANK', value: '莱商银行'},
+                {code: 'BJRCB', value: '北京农村商业银行'},
+                {code: 'TRCB', value: '天津农商银行'},
+                {code: 'SRBANK', value: '上饶银行'},
+                {code: 'FDB', value: '富滇银行'},
+                {code: 'CRCBANK', value: '重庆农村商业银行'},
+                {code: 'ASCB', value: '鞍山银行'},
+                {code: 'NXBANK', value: '宁夏银行'},
+                {code: 'BHB', value: '河北银行'},
+                {code: 'HRXJB', value: '华融湘江银行'},
+                {code: 'ZGCCB', value: '自贡市商业银行'},
+                {code: 'YNRCC', value: '云南省农村信用社'},
+                {code: 'JLBANK', value: '吉林银行'},
+                {code: 'DYCCB', value: '东营市商业银行'},
+                {code: 'KLB', value: '昆仑银行'},
+                {code: 'ORBANK', value: '鄂尔多斯银行'},
+                {code: 'XTB', value: '邢台银行'},
+                {code: 'JSB', value: '晋商银行'},
+                {code: 'TCCB', value: '天津银行'},
+                {code: 'BOYK', value: '营口银行'},
+                {code: 'JLRCU', value: '吉林农信'},
+                {code: 'SDRCU', value: '山东农信'},
+                {code: 'XABANK', value: '西安银行'},
+                {code: 'HBRCU', value: '河北省农村信用社'},
+                {code: 'NXRCU', value: '宁夏黄河农村商业银行'},
+                {code: 'GZRCU', value: '贵州省农村信用社'},
+                {code: 'FXCB', value: '阜新银行'},
+                {code: 'HBHSBANK', value: '湖北银行黄石分行'},
+                {code: 'ZJNX', value: '浙江省农村信用社联合社'},
+                {code: 'XXBANK', value: '新乡银行'},
+                {code: 'HBYCBANK', value: '湖北银行宜昌分行'},
+                {code: 'LSCCB', value: '乐山市商业银行'},
+                {code: 'TCRCB', value: '江苏太仓农村商业银行'},
+                {code: 'BZMD', value: '驻马店银行'},
+                {code: 'GZB', value: '赣州银行'},
+                {code: 'WRCB', value: '无锡农村商业银行'},
+                {code: 'BGB', value: '广西北部湾银行'},
+                {code: 'GRCB', value: '广州农商银行'},
+                {code: 'JRCB', value: '江苏江阴农村商业银行'},
+                {code: 'BOP', value: '平顶山银行'},
+                {code: 'TACCB', value: '泰安市商业银行'},
+                {code: 'CGNB', value: '南充市商业银行'},
+                {code: 'CCQTGB', value: '重庆三峡银行'},
+                {code: 'XLBANK', value: '中山小榄村镇银行'},
+                {code: 'HDBANK', value: '邯郸银行'},
+                {code: 'KORLABANK', value: '库尔勒市商业银行'},
+                {code: 'BOJZ', value: '锦州银行'},
+                {code: 'QLBANK', value: '齐鲁银行'},
+                {code: 'BOQH', value: '青海银行'},
+                {code: 'YQCCB', value: '阳泉银行'},
+                {code: 'SJBANK', value: '盛京银行'},
+                {code: 'FSCB', value: '抚顺银行'},
+                {code: 'ZZBANK', value: '郑州银行'},
+                {code: 'SRCB', value: '深圳农村商业银行'},
+                {code: 'BANKWF', value: '潍坊银行'},
+                {code: 'JJBANK', value: '九江银行'},
+                {code: 'JXRCU', value: '江西省农村信用'},
+                {code: 'HNRCU', value: '河南省农村信用'},
+                {code: 'GSRCU', value: '甘肃省农村信用'},
+                {code: 'SCRCU', value: '四川省农村信用'},
+                {code: 'GXRCU', value: '广西省农村信用'},
+                {code: 'SXRCCU', value: '陕西信合'},
+                {code: 'WHRCB', value: '武汉农村商业银行'},
+                {code: 'YBCCB', value: '宜宾市商业银行'},
+                {code: 'KSRB', value: '昆山农村商业银行'},
+                {code: 'SZSBK', value: '石嘴山银行'},
+                {code: 'HSBK', value: '衡水银行'},
+                {code: 'XYBANK', value: '信阳银行'},
+                {code: 'NBYZ', value: '鄞州银行'},
+                {code: 'ZJKCCB', value: '张家口市商业银行'},
+                {code: 'XCYH', value: '许昌银行'},
+                {code: 'JNBANK', value: '济宁银行'},
+                {code: 'CBKF', value: '开封市商业银行'},
+                {code: 'WHCCB', value: '威海市商业银行'},
+                {code: 'HBC', value: '湖北银行'},
+                {code: 'BOCD', value: '承德银行'},
+                {code: 'BODD', value: '丹东银行'},
+                {code: 'JHBANK', value: '金华银行'},
+                {code: 'BOCY', value: '朝阳银行'},
+                {code: 'LSBC', value: '临商银行'},
+                {code: 'BSB', value: '包商银行'},
+                {code: 'LZYH', value: '兰州银行'},
+                {code: 'BOZK', value: '周口银行'},
+                {code: 'DZBANK', value: '德州银行'},
+                {code: 'SCCB', value: '三门峡银行'},
+                {code: 'AYCB', value: '安阳银行'},
+                {code: 'ARCU', value: '安徽省农村信用社'},
+                {code: 'HURCB', value: '湖北省农村信用社'},
+                {code: 'HNRCC', value: '湖南省农村信用社'},
+                {code: 'NYNB', value: '广东南粤银行'},
+                {code: 'LYBANK', value: '洛阳银行'},
+                {code: 'NHQS', value: '农信银清算中心'},
+                {code: 'CBBQS', value: '城市商业银行资金清算中心'}
+            ]
+        },
+        getProjects() { // 获取房产项目
+            return this.$https.get('/api/pms_base_projects/GetProjects', {
+                params: {
+                    page: 1,
+                    page_size: 999,
+                }
+            }).then((result) => {
+                if (result.data.code == 0) {
+                    this.projects = result.data.data.Items;
+                } else {
+                    this.$message({
+                        type: 'error',
+                        showClose: true,
+                        message: result.data.message
+                    })
+                }
+            })
+        },
+        getBuildings(val) { // 获取楼宇
+            let obj = this.projects.find((item)=>{
+                return item.project_id === val;
+            });
+            this.form3.project_name = obj.project_name;
+
+            this.form3.building_id = ''
+            return this.$https.get('/api/pms_base_buildings/GetBuildings', {
+                params: {
+                    page: 1,
+                    page_size: 999,
+                    project_id: this.form3.project_id
+                }
+            }).then((result) => {
+                if (result.data.code == 0) {
+                    // 遍历项目
+                    this.building = result.data.data.Items;
+                } else {
+                    this.$message({
+                        type: 'error',
+                        showClose: true,
+                        message: result.data.message
+                    })
+                }
+            })
+        },
+        // 获取数据
+        getList() {
+            this.$https.get('/api/pms_sale_open/GetOpenDetails', {
+                params: {
+                    building_id: this.form3.building_id,
+                }
+            }).then((result) => {
+                if (result.data.code == 0) {
+                    this.roomList = result.data.data.floors;
+                    this.roomMaxLength = result.data.data.floor_max_room;
+                    this.build_name = result.data.data.building_name;
+                    this.roomList.map(item => {
+                        item.rooms.map(items => {
+                            this.$set(items, 'active', false);
+                        })
+                    })
+                } else {
+                    this.$message({
+                        type: 'error',
+                        showClose: true,
+                        message: result.data.message
+                    })
+                }
+            })
+        },
+        changeBuilding(val) {
+            let obj = this.building.find((item)=>{
+                return item.building_id === val;
+            });
+            this.form3.building_name = obj.building_name;
+            if(val!==''){
+               this.getList(); 
+            }
+            
+        },
+        checkedRoom(item) {
+            if (item.open_status === 1 || (item.open_status === 2 && this.isChief)) {
+                // 可售 或者总监预留
+
+                if (item.active) { // 原来选中的，则要在选中列表删除
+                    let selegth = this.roomSelected.length + 1;
+                    let index_of = this.roomSelected.indexOf(item, -selegth);
+                    this.roomSelected.splice(index_of, 1);
+                } else { // 原来没选中的，要添加到选中列表
+                    this.roomSelected.push(item);
+                }
+                item.active = !item.active;
+            }
+        }
+    },
+    filters: {
+        filterRoomStatus: ([active, open_status, sale_status, isChief]) => {
+            let className = active ? 'active' : '';
+            if (open_status === 0) {
+                // 未放盘，不可选
+                className += ' status0 disabled'
+            } else if (open_status === 1){
+
+                className += ' status1 room'
+                // 可售
+            } else if (open_status === 2 && isChief){
+                // 预留-总监
+                className += ' status2 room'
+            } else if (open_status === 2 && !isChief){
+                // 预留-非总监
+                className += ' status2 disabled'
+            } else
+            if (sale_status === 1) {
+                // 已选定
+                className += ' status3 disabled'
+            } else if (sale_status === 2){
+                // 已定制
+                className += ' status4 disabled'
+            } else if (sale_status === 3){
+                // 已认购
+                className += ' status5 disabled'
+            } else if (sale_status === 4){
+                // 已签约
+                className += ' status6 disabled'
+            }
+            return className
+        }
+    },
+    mounted() {
+        this.banks = this.loadBank();
+    }
+}
+</script>
+<style scoped>
+    /deep/ .el-step.is-vertical .el-step__title {
+        cursor: pointer;
+    }
+    .table-border {
+        border-spacing: 0;
+        border-collapse: collapse;
+        margin-bottom: 22px;
+    }
+    .table-border th,.table-border td {
+        border: 1px solid #ebeef5;
+        padding: 12px 10px;
+    }
+    .table-border thead tr {
+        background-color: #f5f7fa;
+    }
+
+    .selling_rooms {
+        width: 800px;
+    }
+    .selling_rooms_list {
+        padding-bottom: 20px; 
+        overflow-x: auto;
+    }
+    .statusTag {
+        display: block;
+        list-style: none;
+        text-align: right;
+    }
+    .statusTag li {
+        display: inline-block;
+        margin-left: 5px;
+    }
+    .statusTag li i {
+        border:1px solid #ebeef5;
+    }
+    .selling_table {
+        border-spacing: 0;
+        border-collapse: collapse;
+        text-align: center;
+    }
+    .selling_table th {
+        text-align: left;
+    }
+    .selling_table th {
+        padding: 2px;
+        min-width: 80px;
+        max-width: 80px;
+    }
+    .selling_table td {
+        border: 1px solid #ebeef5;
+        padding: 2px;
+        min-width: 80px;
+        max-width: 80px;
+    }
+    .selling_table td.room {
+        cursor: pointer;
+    }
+/* 未放盘      status0，
+可售(待售)  status1
+预留        status2
+已选定      status3
+已定制      status4
+已认购      status5
+已签约      status6 */
+    td.status0 {
+        /* 未放盘，不可选 */
+        background-color: #bbb;
+        color: #fff;
+    }
+    .room.status1 {
+        /* 可售 */
+        background-color: #fff;
+        color: #606266;
+    }
+    .room.status2 {
+        /* 预留 */
+        background-color: #409EFF;
+        color: #fff;
+    }
+    td.status3 {
+        /* 已选定 */
+        background-color: #67c23a;
+        color: #fff;
+    }
+    td.status4 {
+        /* 已定制 */
+        background-color: #abe3ff;
+        color: #fff;
+    }
+    td.status5 {
+        /* 已认购 */
+        background-color: #0cf;
+        color: #fff;
+    }
+    td.status6 {
+        /* 已签约 */
+        background-color: #00cc66;
+        color: #fff;
+    }
+
+
+    td.disabled {
+        /* 不可选 */
+        cursor: no-drop;
+    }
+    .room.active {
+        /* 预留 */
+        background-color: #FFB840;
+        color: #fff;
+    }
+    .el-tag {
+        margin-right: 10px;
+    }
+</style>
